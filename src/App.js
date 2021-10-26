@@ -148,7 +148,7 @@ function Body() {
   return (
     <Grid container direction="row" spacing={9}>
       <Grid item xs>
-        <img src="/girl1.png" style={{ width: "100%" }}></img>
+        <img src="./girl1.png" style={{ width: "100%" }}></img>
       </Grid>
       <Grid
         item

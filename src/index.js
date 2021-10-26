@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { Web3ReactProvider } from "@web3-react/core";
 
 import { CssBaseline, createTheme, ThemeProvider } from "@mui/material";
@@ -29,22 +28,12 @@ const theme = createTheme({
   },
 });
 
-const Main = () => {
-  return (
-    <BrowserRouter>
-      <Switch>
-        <Route path="/" exact component={() => <App />} />
-      </Switch>
-    </BrowserRouter>
-  );
-};
-
 ReactDOM.render(
   <React.StrictMode>
     <Web3ReactProvider getLibrary={getLibrary}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Main />
+        <App />
       </ThemeProvider>
     </Web3ReactProvider>
   </React.StrictMode>,
