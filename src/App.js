@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { Button, Grid, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  TextField,
+  Typography,
+} from "@mui/material";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 import ConnectWalletButton from "./components/ConnectWalletButton";
@@ -11,6 +19,7 @@ import {
 } from "./utils/constants";
 import TokenSelect from "./components/TokenSelect";
 import Token from "./utils/Token";
+import { BigNumber } from "@ethersproject/bignumber";
 
 export default function App() {
   return (
@@ -54,6 +63,8 @@ function Body() {
   const [addressFrom, setAddressFrom] = useState();
   const [addressTo, setAddressTo] = useState();
   const [contractFrom, setContractFrom] = useState();
+  const [decimalsFrom, setDecimalsFrom] = useState();
+  const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
   useEffect(() => {
     if (!library) return;
@@ -68,6 +79,7 @@ function Body() {
             const address = await RANGEPOOL_CONTRACT.methods.tokens(i).call();
             const token = new Token(address, library.currentProvider);
             await token.getSymbol();
+            await token.getDecimals();
             resolve(token);
           } catch {
             resolve();
@@ -87,6 +99,7 @@ function Body() {
     if (!fromToken) return;
     const token = tokens.find((token) => token.symbol === fromToken);
     setContractFrom(token.contract);
+    setDecimalsFrom(token.decimals);
     setAddressFrom(token.address);
   }, [fromToken]);
 
@@ -120,13 +133,20 @@ function Body() {
         .allowance(RANGEPOOL_ADDRESS, account)
         .call();
 
+      const coeff = BigNumber.from(10).pow(decimalsFrom);
+
+      const infinite = BigNumber.from(999999999999).mul(coeff);
+      const needed = BigNumber.from(fromAmount).mul(coeff);
+
       if (allowance < fromAmount) {
+        const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+
         await contractFrom.methods
-          .approve(RANGEPOOL_ADDRESS, fromAmount)
+          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
           .send({ from: account });
       }
       return true;
-    } catch {
+    } catch (e) {
       console.error("error approving");
       return false;
     }
@@ -145,10 +165,17 @@ function Body() {
     } catch {}
   }
 
+  function handleCheckboxChange() {
+    setEnableInfiniteAllowance(!enableInfiniteAllowance);
+  }
+
   return (
     <Grid container direction="row" spacing={9}>
       <Grid item xs>
-        <img src="./girl1.png" style={{ width: "100%" }}></img>
+        <img
+          src="https://pngimg.com/uploads/anime_girl/anime_girl_PNG46.png"
+          style={{ width: "100%" }}
+        ></img>
       </Grid>
       <Grid
         item
@@ -198,6 +225,19 @@ function Body() {
           >
             {swapButtonText}
           </Button>
+        </Grid>
+        <Grid item container justifyContent="flex-end" alignItems="center">
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  value={enableInfiniteAllowance}
+                  onChange={handleCheckboxChange}
+                />
+              }
+              label="infinite allowance"
+            />
+          </FormGroup>
         </Grid>
       </Grid>
     </Grid>

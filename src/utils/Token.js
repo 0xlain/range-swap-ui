@@ -14,4 +14,8 @@ export default class Token {
   async getSymbol() {
     this.symbol = await this.contract.methods.symbol().call();
   }
+
+  async getDecimals() {
+    this.decimals = await this.contract.methods.decimals().call();
+  }
 }
