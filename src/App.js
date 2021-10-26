@@ -134,7 +134,6 @@ function Body() {
         .call();
 
       const coeff = BigNumber.from(10).pow(decimalsFrom);
-
       const infinite = BigNumber.from(999999999999).mul(coeff);
       const needed = BigNumber.from(fromAmount).mul(coeff);
 
@@ -158,9 +157,12 @@ function Body() {
     const success = await handleApprove();
     if (!success) return;
 
+    const coeff = BigNumber.from(10).pow(decimalsFrom);
+    const needed = BigNumber.from(fromAmount).mul(coeff);
+
     try {
       RANGEPOOL_CONTRACT.methods
-        .swap(addressFrom, fromAmount, addressTo)
+        .swap(addressFrom, needed, addressTo)
         .send({ from: account });
     } catch {}
   }
