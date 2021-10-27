@@ -64,6 +64,7 @@ function Body() {
   const [addressTo, setAddressTo] = useState();
   const [contractFrom, setContractFrom] = useState();
   const [decimalsFrom, setDecimalsFrom] = useState();
+  const [decimalsTo, setDecimalsTo] = useState();
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
   useEffect(() => {
@@ -105,21 +106,36 @@ function Body() {
 
   useEffect(() => {
     if (!toToken) return;
-    const addr = tokens.find((token) => token.symbol === toToken).address;
-    setAddressTo(addr);
+    const token = tokens.find((token) => token.symbol === toToken);
+    setDecimalsTo(token.decimals);
+    setAddressTo(token.address);
   }, [toToken]);
 
-  useEffect(() => {
+  useEffect(async () => {
     if (!addressFrom || !addressTo || !account) return;
 
-    try {
-      RANGEPOOL_CONTRACT.methods
+    const coeff = BigNumber.from(10).pow(decimalsFrom);
+
+    const maxTo = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressFrom, addressTo).call()
+    ).div(coeff);
+
+    const maxFrom = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressTo, addressFrom).call()
+    ).div(coeff);
+
+    const amountOut = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods
         .amountOut(addressFrom, fromAmount, addressTo)
         .call()
-        .then((amount) => {
-          setToAmount(amount);
-        });
-    } catch {}
+    );
+
+    if (amountOut.lte(maxTo)) {
+      setToAmount(amountOut);
+    } else {
+      setToAmount(maxTo.toNumber());
+      setFromAmount(maxFrom.toNumber());
+    }
   }, [addressFrom, addressTo, fromAmount, account]);
 
   function handleFromAmountChange(e) {
