@@ -6,7 +6,7 @@ import { CssBaseline, createTheme, ThemeProvider } from "@mui/material";
 import { blue, pink } from "@mui/material/colors";
 
 import "./index.css";
-import App from "./App";
+import { App } from "./App_v2/App";
 
 const Web3 = require("web3");
 
