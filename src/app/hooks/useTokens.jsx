@@ -22,6 +22,7 @@ export function useTokens() {
             const token = new Token(address, library.currentProvider);
             await token.getSymbol();
             await token.getDecimals();
+            await token.getLiquidity();
             resolve(token);
           } catch {
             resolve();
