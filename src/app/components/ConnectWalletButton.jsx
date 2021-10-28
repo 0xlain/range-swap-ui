@@ -40,10 +40,9 @@ export default function ConnectWalletButton() {
       const isAuthorized = await injected.isAuthorized();
 
       if (isAuthorized) {
-        activate(injected, undefined, true)
-          .catch((error) => {
-            console.error(error);
-          });
+        activate(injected, undefined, true).catch((error) => {
+          console.error(error);
+        });
       }
     }
   };
