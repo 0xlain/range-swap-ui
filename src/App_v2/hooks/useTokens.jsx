@@ -11,6 +11,8 @@ export function useTokens() {
   useEffect(() => {
     if (!library) return;
 
+    RANGEPOOL_CONTRACT.setProvider(library.currentProvider);
+
     const promises = [];
     for (var i = 0; i < NUM_TOKENS; i++) {
       promises.push(
