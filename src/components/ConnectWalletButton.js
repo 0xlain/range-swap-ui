@@ -14,7 +14,9 @@ function shortenHex(hex, length = 4) {
   )}`;
 }
 
-export default function ConnectWalletButton() {
+export default function ConnectWalletButton(props) {
+  const { buttonBackground } = props;
+
   const { activate, account } = useWeb3React();
 
   const [buttonText, setButtonText] = useState(ONBOARD_TEXT);
@@ -39,11 +41,10 @@ export default function ConnectWalletButton() {
   return (
     <Button
       variant="text"
-      color="secondary"
       disabled={isDisabled}
       onClick={onClick}
       variant="contained"
-      style={{ width: "100%" }}
+      sx={{ width: "100%", background: buttonBackground }}
     >
       {buttonText}
     </Button>
