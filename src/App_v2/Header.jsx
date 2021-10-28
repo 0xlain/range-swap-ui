@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { ReactComponent as RangeSwapSvg } from "../assets/RangeSwap.svg";
-import ConnectWalletButton from "../components/ConnectWalletButton";
+import ConnectWalletButton from "./components/ConnectWalletButton";
 
 const HeaderContainer = styled.div``;
 
