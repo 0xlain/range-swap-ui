@@ -32,8 +32,8 @@ export const Trade = () => {
   const [decimalsFrom, setDecimalsFrom] = useState();
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
   const [needsApproval, setNeedsApproval] = useState(false);
-  const [disableApproveButton, setDisableApproveButton] = useState(false);
-  const [disableSwapButton, setDisableSwapButton] = useState(false);
+  const [disableApproveButton, setDisableApproveButton] = useState(true);
+  const [disableSwapButton, setDisableSwapButton] = useState(true);
   const [swapBackground, setSwapBackground] = useState("");
   const [approveBackground, setApproveBackground] = useState("");
 

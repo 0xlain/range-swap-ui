@@ -17,15 +17,15 @@ import { useTokens } from "../hooks/useTokens";
 import { RANGEPOOL_ADDRESS } from "../utils/constants";
 
 export const LP = () => {
-  const { account, library } = useWeb3React();
+  const { account } = useWeb3React();
   const tokens = useTokens();
 
   const [selectedMode, setSelectedMode] = useState("Add");
   const [token, setToken] = useState("");
   const [amount, setAmount] = useState(0);
   const [needsApproval, setNeedsApproval] = useState(false);
-  const [disableApproveButton, setDisableApproveButton] = useState(false);
-  const [disableSwapButton, setDisableSwapButton] = useState(false);
+  const [disableApproveButton, setDisableApproveButton] = useState(true);
+  const [disableSwapButton, setDisableSwapButton] = useState(true);
   const [swapBackground, setSwapBackground] = useState("");
   const [approveBackground, setApproveBackground] = useState("");
   const [tokenContract, setTokenContract] = useState();
