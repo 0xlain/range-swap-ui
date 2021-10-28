@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { ReactComponent as RangeSwapSvg } from "../assets/RangeSwap.svg";
+import ConnectWalletButton from "../components/ConnectWalletButton";
 
 const HeaderContainer = styled.div``;
 
@@ -22,5 +23,8 @@ export const Header = () => (
   <HeaderContainer>
     <RangeSwapText />
     <HeaderLine />
+    <div style={{ position: "absolute", top: "0", right: "0", margin: "30px" }}>
+      <ConnectWalletButton />
+    </div>
   </HeaderContainer>
 );

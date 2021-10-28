@@ -14,9 +14,7 @@ function shortenHex(hex, length = 4) {
   )}`;
 }
 
-export default function ConnectWalletButton(props) {
-  const { buttonBackground } = props;
-
+export default function ConnectWalletButton() {
   const { activate, account } = useWeb3React();
 
   const [buttonText, setButtonText] = useState(ONBOARD_TEXT);
@@ -38,13 +36,17 @@ export default function ConnectWalletButton(props) {
     });
   };
 
+  const buttonBg = !account
+    ? "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
+    : " #59318C59  ";
+
   return (
     <Button
       variant="text"
       disabled={isDisabled}
       onClick={onClick}
       variant="contained"
-      sx={{ width: "100%", background: buttonBackground }}
+      sx={{ background: buttonBg }}
     >
       {buttonText}
     </Button>
