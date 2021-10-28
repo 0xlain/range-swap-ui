@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import { Web3ReactProvider } from "@web3-react/core";
 
 import { CssBaseline, createTheme, ThemeProvider } from "@mui/material";
-import { blue, pink } from "@mui/material/colors";
 
 import "./index.css";
 import { App } from "./App_v2/App";

@@ -19,7 +19,6 @@ import {
 } from "../../utils/constants";
 import Token from "../../utils/Token";
 import TokenSelect from "../../components/TokenSelect";
-import ConnectWalletButton from "../../components/ConnectWalletButton";
 
 export const Trade = () => {
   const { account, library } = useWeb3React();
@@ -162,10 +161,6 @@ export const Trade = () => {
     ? "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
     : " #59318C59  ";
 
-  const connectBg = !account
-    ? "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
-    : " #59318C59  ";
-
   return (
     <Grid
       container
@@ -224,9 +219,6 @@ export const Trade = () => {
         >
           {swapButtonText}
         </Button>
-      </Grid>
-      <Grid item container justifyContent="center">
-        <ConnectWalletButton buttonBackground={connectBg} />
       </Grid>
       <Grid item container justifyContent="flex-end" alignItems="center">
         <FormGroup>
