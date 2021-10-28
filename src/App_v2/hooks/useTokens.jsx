@@ -14,7 +14,7 @@ export function useTokens() {
     RANGEPOOL_CONTRACT.setProvider(library.currentProvider);
 
     const promises = [];
-    for (var i = 0; i < NUM_TOKENS; i++) {
+    for (let i = 0; i < NUM_TOKENS; i++) {
       promises.push(
         new Promise(async (resolve, reject) => {
           try {
