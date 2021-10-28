@@ -18,7 +18,7 @@ window.ethereum.enable();
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
       main: blue[500],
     },
