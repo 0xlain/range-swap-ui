@@ -192,7 +192,7 @@ export const Trade = () => {
           </Paper>
         </Grid>
       </Grid>
-      <Grid item container justifyContent="center">
+      <Grid item container justifyContent="flex-start">
         <ArrowDownwardIcon />
       </Grid>
       <Grid item container spacing={1}>
