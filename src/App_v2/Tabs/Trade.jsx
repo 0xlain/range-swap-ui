@@ -158,6 +158,14 @@ export const Trade = () => {
     setEnableInfiniteAllowance(!enableInfiniteAllowance);
   }
 
+  const swapBg = account
+    ? "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
+    : " #59318C59  ";
+
+  const connectBg = !account
+    ? "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
+    : " #59318C59  ";
+
   return (
     <Grid
       container
@@ -168,12 +176,12 @@ export const Trade = () => {
     >
       <Grid item container spacing={1}>
         <Grid item>
-          <Paper sx={{ backgroundColor: "rgba(120, 95, 218, 0.17)" }}>
+          <Paper sx={{ background: "#785FDA33" }}>
             <TokenSelect label="From" tokens={tokens} onChange={setFromToken} />
           </Paper>
         </Grid>
         <Grid item xs>
-          <Paper sx={{ backgroundColor: "rgba(120, 95, 218, 0.17)" }}>
+          <Paper sx={{ background: "#0A0717CC" }}>
             <TextField
               label="Amount"
               value={fromAmount}
@@ -189,12 +197,12 @@ export const Trade = () => {
       </Grid>
       <Grid item container spacing={1}>
         <Grid item>
-          <Paper sx={{ backgroundColor: "rgba(120, 95, 218, 0.17)" }}>
+          <Paper sx={{ background: "#785FDA33" }}>
             <TokenSelect label="To" tokens={tokens} onChange={setToToken} />
           </Paper>
         </Grid>
         <Grid item xs>
-          <Paper sx={{ backgroundColor: "rgba(120, 95, 218, 0.17)" }}>
+          <Paper sx={{ background: "#0A0717CC" }}>
             <TextField
               label=""
               value={toAmount}
@@ -208,14 +216,17 @@ export const Trade = () => {
         <Button
           variant="contained"
           onClick={handleSwap}
-          style={{ width: "100%" }}
           disabled={!account}
+          sx={{
+            width: "100%",
+            background: swapBg,
+          }}
         >
           {swapButtonText}
         </Button>
       </Grid>
       <Grid item container justifyContent="center">
-        <ConnectWalletButton />
+        <ConnectWalletButton buttonBackground={connectBg} />
       </Grid>
       <Grid item container justifyContent="flex-end" alignItems="center">
         <FormGroup>
