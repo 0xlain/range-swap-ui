@@ -12,18 +12,15 @@ import {
 } from "@mui/material";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
-import {
-  NUM_TOKENS,
-  RANGEPOOL_ADDRESS,
-  RANGEPOOL_CONTRACT,
-} from "../../utils/constants";
-import Token from "../../utils/Token";
+import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
+import { useTokens } from "../hooks/useTokens";
+
 import TokenSelect from "../../components/TokenSelect";
 
 export const Trade = () => {
-  const { account, library } = useWeb3React();
+  const { account } = useWeb3React();
 
-  const [tokens, setTokens] = useState([]);
+  const tokens = useTokens();
 
   const [fromToken, setFromToken] = useState();
   const [toToken, setToToken] = useState();
@@ -39,35 +36,6 @@ export const Trade = () => {
   const [disableSwapButton, setDisableSwapButton] = useState(false);
   const [swapBackground, setSwapBackground] = useState("");
   const [approveBackground, setApproveBackground] = useState("");
-
-  useEffect(() => {
-    if (!library) return;
-    RANGEPOOL_CONTRACT.defaultAccount = account;
-    RANGEPOOL_CONTRACT.setProvider(library.currentProvider);
-
-    const promises = [];
-    for (var i = 0; i < NUM_TOKENS; i++) {
-      promises.push(
-        new Promise(async (resolve, reject) => {
-          try {
-            const address = await RANGEPOOL_CONTRACT.methods.tokens(i).call();
-            const token = new Token(address, library.currentProvider);
-            await token.getSymbol();
-            await token.getDecimals();
-            resolve(token);
-          } catch {
-            resolve();
-          }
-        })
-      );
-    }
-
-    Promise.all(promises).then((addresses) => {
-      const newTokens = addresses.filter((address) => address !== undefined);
-
-      setTokens(newTokens);
-    });
-  }, [account]);
 
   useEffect(() => {
     if (account && needsApproval && Number(fromAmount) !== 0) {
@@ -95,17 +63,17 @@ export const Trade = () => {
 
   useEffect(() => {
     if (!fromToken) return;
-    const token = tokens.find((token) => token.symbol === fromToken);
+    const token = tokens?.find((token) => token.symbol === fromToken);
     setContractFrom(token.contract);
     setDecimalsFrom(token.decimals);
     setAddressFrom(token.address);
-  }, [fromToken]);
+  }, [fromToken, tokens]);
 
   useEffect(() => {
     if (!toToken) return;
-    const token = tokens.find((token) => token.symbol === toToken);
+    const token = tokens?.find((token) => token.symbol === toToken);
     setAddressTo(token.address);
-  }, [toToken]);
+  }, [toToken, tokens]);
 
   useEffect(async () => {
     if (!addressFrom || !addressTo || !account) return;
