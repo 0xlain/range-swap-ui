@@ -70,7 +70,7 @@ export const Trade = () => {
   }, [account]);
 
   useEffect(() => {
-    if (account && needsApproval && fromAmount !== 0) {
+    if (account && needsApproval && Number(fromAmount) !== 0) {
       setDisableApproveButton(false);
       setApproveBackground(
         "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
@@ -79,10 +79,10 @@ export const Trade = () => {
       setDisableApproveButton(true);
       setApproveBackground("#59318C59");
     }
-  }, [account, needsApproval]);
+  }, [account, needsApproval, fromAmount]);
 
   useEffect(() => {
-    if (account && !needsApproval && fromAmount !== 0) {
+    if (account && !needsApproval && Number(fromAmount) !== 0) {
       setDisableSwapButton(false);
       setSwapBackground(
         "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
