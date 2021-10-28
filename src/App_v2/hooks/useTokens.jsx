@@ -4,13 +4,13 @@ import { NUM_TOKENS, RANGEPOOL_CONTRACT } from "../utils/constants";
 import Token from "../utils/Token";
 
 export function useTokens() {
-  const { account, library } = useWeb3React();
+  const { library } = useWeb3React();
 
   const [tokens, setTokens] = useState([]);
 
   useEffect(() => {
     if (!library) return;
-    RANGEPOOL_CONTRACT.defaultAccount = account;
+
     RANGEPOOL_CONTRACT.setProvider(library.currentProvider);
 
     const promises = [];
@@ -35,7 +35,7 @@ export function useTokens() {
 
       setTokens(newTokens);
     });
-  }, [account]);
+  }, [library]);
 
   return tokens;
 }
