@@ -1,14 +1,11 @@
+import React from "react";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { Box } from "@mui/system";
-import { useState } from "react";
 
 export default function TokenSelect(props) {
-  const { label = "Token", tokens, onChange } = props;
-
-  const [token, setToken] = useState("");
+  const { label = "Token", tokens, onChange, value } = props;
 
   const handleChange = (e) => {
-    setToken(e.target.value);
     onChange(e.target.value);
   };
 
@@ -18,7 +15,7 @@ export default function TokenSelect(props) {
         <InputLabel id="token-select">{label}</InputLabel>
         <Select
           labelId="token-select"
-          value={token}
+          value={value}
           label={label}
           onChange={handleChange}
         >
