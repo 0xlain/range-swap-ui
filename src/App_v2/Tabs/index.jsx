@@ -44,9 +44,8 @@ const TabContainer = styled.div`
   align-items: center;
   padding: 40px;
 
-  /* FIXME: only for dev purposes */
-  width: 300px;
-  height: 300px;
+  min-width: 300px;
+  min-height: 300px;
 
   background: linear-gradient(
     180deg,

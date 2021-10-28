@@ -43,6 +43,7 @@ export default function ConnectWalletButton() {
       disabled={isDisabled}
       onClick={onClick}
       variant="contained"
+      style={{ width: "100%" }}
     >
       {buttonText}
     </Button>
