@@ -91,6 +91,16 @@ export const LP = () => {
       if (amount > maxAdd.toNumber()) {
         setAmount(maxAdd);
       }
+    } else if (selectedMode === "Withdraw") {
+      const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
+      const coeff = BigNumber.from(10).pow(poolDecimals);
+      const balance = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+      ).div(coeff);
+
+      if (amount > balance.toNumber()) {
+        setAmount(balance);
+      }
     }
   }, [amount, tokenAddress, selectedMode]);
 
@@ -151,8 +161,6 @@ export const LP = () => {
 
   async function handleWithdraw() {
     if (!tokenAddress || !amount || !account) return;
-
-    //TODO: get number of tokens available to withdraw
 
     const coeff = BigNumber.from(10).pow(tokenDecimals);
     const needed = BigNumber.from(amount).mul(coeff);
