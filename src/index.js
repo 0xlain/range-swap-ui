@@ -13,8 +13,6 @@ function getLibrary(provider, connector) {
   return new Web3(provider);
 }
 
-window.ethereum.enable();
-
 const theme = createTheme({
   palette: {
     mode: "dark",
