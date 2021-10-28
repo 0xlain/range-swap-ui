@@ -22,7 +22,7 @@ export default function TokenSelect(props) {
           label={label}
           onChange={handleChange}
         >
-          {tokens.map((token, i) => {
+          {tokens?.map((token, i) => {
             const symbol = String(token.symbol);
             return (
               <MenuItem key={i} value={symbol}>
