@@ -27,15 +27,18 @@ export const Trade = () => {
 
   const [fromToken, setFromToken] = useState();
   const [toToken, setToToken] = useState();
-  const [swapButtonText, setSwapButtonText] = useState("Swap");
   const [fromAmount, setFromAmount] = useState(0);
   const [toAmount, setToAmount] = useState(0);
   const [addressFrom, setAddressFrom] = useState();
   const [addressTo, setAddressTo] = useState();
   const [contractFrom, setContractFrom] = useState();
   const [decimalsFrom, setDecimalsFrom] = useState();
-  const [decimalsTo, setDecimalsTo] = useState();
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
+  const [needsApproval, setNeedsApproval] = useState(false);
+  const [disableApproveButton, setDisableApproveButton] = useState(false);
+  const [disableSwapButton, setDisableSwapButton] = useState(false);
+  const [swapBackground, setSwapBackground] = useState("");
+  const [approveBackground, setApproveBackground] = useState("");
 
   useEffect(() => {
     if (!library) return;
@@ -67,6 +70,30 @@ export const Trade = () => {
   }, [account]);
 
   useEffect(() => {
+    if (account && needsApproval && fromAmount !== 0) {
+      setDisableApproveButton(false);
+      setApproveBackground(
+        "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
+      );
+    } else {
+      setDisableApproveButton(true);
+      setApproveBackground("#59318C59");
+    }
+  }, [account, needsApproval]);
+
+  useEffect(() => {
+    if (account && !needsApproval && fromAmount !== 0) {
+      setDisableSwapButton(false);
+      setSwapBackground(
+        "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
+      );
+    } else {
+      setDisableSwapButton(true);
+      setSwapBackground("#59318C59");
+    }
+  }, [account, needsApproval]);
+
+  useEffect(() => {
     if (!fromToken) return;
     const token = tokens.find((token) => token.symbol === fromToken);
     setContractFrom(token.contract);
@@ -77,7 +104,6 @@ export const Trade = () => {
   useEffect(() => {
     if (!toToken) return;
     const token = tokens.find((token) => token.symbol === toToken);
-    setDecimalsTo(token.decimals);
     setAddressTo(token.address);
   }, [toToken]);
 
@@ -105,6 +131,16 @@ export const Trade = () => {
     } else {
       setToAmount(maxTo.toNumber());
       setFromAmount(maxFrom.toNumber());
+    }
+
+    const allowance = await contractFrom.methods
+      .allowance(RANGEPOOL_ADDRESS, account)
+      .call();
+
+    if (allowance < fromAmount) {
+      setNeedsApproval(true);
+    } else {
+      setNeedsApproval(false);
     }
   }, [addressFrom, addressTo, fromAmount, account]);
 
@@ -157,10 +193,6 @@ export const Trade = () => {
     setEnableInfiniteAllowance(!enableInfiniteAllowance);
   }
 
-  const swapBg = account
-    ? "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
-    : " #59318C59  ";
-
   return (
     <Grid
       container
@@ -207,20 +239,37 @@ export const Trade = () => {
           </Paper>
         </Grid>
       </Grid>
-      <Grid item container justifyContent="center">
-        <Button
-          variant="contained"
-          onClick={handleSwap}
-          disabled={!account}
-          sx={{
-            width: "100%",
-            background: swapBg,
-          }}
-        >
-          {swapButtonText}
-        </Button>
+      <Grid item container spacing={1}>
+        <Grid item xs>
+          <Button
+            variant="contained"
+            onClick={handleApprove}
+            disabled={disableApproveButton}
+            sx={{
+              width: "100%",
+              height: "44px",
+              background: approveBackground,
+            }}
+          >
+            Approve
+          </Button>
+        </Grid>
+        <Grid item xs>
+          <Button
+            variant="contained"
+            onClick={handleSwap}
+            disabled={disableSwapButton}
+            sx={{
+              width: "100%",
+              height: "44px",
+              background: swapBackground,
+            }}
+          >
+            Swap
+          </Button>
+        </Grid>
       </Grid>
-      <Grid item container justifyContent="flex-end" alignItems="center">
+      <Grid item container justifyContent="flex-start" alignItems="center">
         <FormGroup>
           <FormControlLabel
             control={
