@@ -26,8 +26,10 @@ export const LP = () => {
   const [needsApproval, setNeedsApproval] = useState(false);
   const [disableApproveButton, setDisableApproveButton] = useState(true);
   const [disableSwapButton, setDisableSwapButton] = useState(true);
-  const [swapBackground, setSwapBackground] = useState("");
-  const [approveBackground, setApproveBackground] = useState("");
+  const [disableWithdrawButton, setDisableWithdrawButton] = useState(true);
+  const [approveBackground, setApproveBackground] = useState();
+  const [swapBackground, setSwapBackground] = useState();
+  const [withdrawBackground, setWithdrawBackground] = useState();
   const [tokenContract, setTokenContract] = useState();
   const [tokenDecimals, setTokenDecimals] = useState();
   const [tokenAddress, setTokenAddress] = useState();
@@ -54,6 +56,18 @@ export const LP = () => {
     } else {
       setDisableSwapButton(true);
       setSwapBackground("#59318C59");
+    }
+  }, [account, needsApproval, amount, token]);
+
+  useEffect(() => {
+    if (account && Number(amount) !== 0 && token) {
+      setDisableWithdrawButton(false);
+      setWithdrawBackground(
+        "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
+      );
+    } else {
+      setDisableWithdrawButton(true);
+      setWithdrawBackground("#59318C59");
     }
   }, [account, needsApproval, amount, token]);
 
@@ -131,6 +145,21 @@ export const LP = () => {
     try {
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
+        .send({ from: account });
+    } catch {}
+  }
+
+  async function handleWithdraw() {
+    if (!tokenAddress || !amount || !account) return;
+
+    //TODO: get number of tokens available to withdraw
+
+    const coeff = BigNumber.from(10).pow(tokenDecimals);
+    const needed = BigNumber.from(amount).mul(coeff);
+
+    try {
+      RANGEPOOL_CONTRACT.methods
+        .remove(tokenAddress, needed)
         .send({ from: account });
     } catch {}
   }
@@ -245,11 +274,12 @@ export const LP = () => {
           <Grid item xs>
             <Button
               variant="contained"
-              disabled={disableSwapButton}
+              disabled={disableWithdrawButton}
+              onClick={handleWithdraw}
               sx={{
                 width: "100%",
                 height: "44px",
-                background: swapBackground,
+                background: withdrawBackground,
               }}
             >
               Withdraw
