@@ -7,6 +7,7 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
+  IconButton,
   Paper,
   TextField,
 } from "@mui/material";
@@ -22,8 +23,8 @@ export const Trade = () => {
 
   const tokens = useTokens();
 
-  const [fromToken, setFromToken] = useState('');
-  const [toToken, setToToken] = useState('');
+  const [fromToken, setFromToken] = useState("");
+  const [toToken, setToToken] = useState("");
   const [fromAmount, setFromAmount] = useState(0);
   const [toAmount, setToAmount] = useState(0);
   const [addressFrom, setAddressFrom] = useState();
@@ -194,7 +195,12 @@ export const Trade = () => {
       <Grid item container spacing={1}>
         <Grid item>
           <Paper sx={{ background: "#785FDA33" }}>
-            <TokenSelect value={fromToken} label="From" tokens={tokens} onChange={setFromToken} />
+            <TokenSelect
+              value={fromToken}
+              label="From"
+              tokens={tokens}
+              onChange={setFromToken}
+            />
           </Paper>
         </Grid>
         <Grid item xs>
@@ -210,12 +216,19 @@ export const Trade = () => {
         </Grid>
       </Grid>
       <Grid item container justifyContent="flex-start">
-        <SwapTokensIcon onClick={swapTokens} />
+        <IconButton onClick={swapTokens}>
+          <SwapTokensIcon />
+        </IconButton>
       </Grid>
       <Grid item container spacing={1}>
         <Grid item>
           <Paper sx={{ background: "#785FDA33" }}>
-            <TokenSelect value={toToken} label="To" tokens={tokens} onChange={setToToken} />
+            <TokenSelect
+              value={toToken}
+              label="To"
+              tokens={tokens}
+              onChange={setToToken}
+            />
           </Paper>
         </Grid>
         <Grid item xs>
