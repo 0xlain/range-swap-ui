@@ -15,7 +15,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
 import { useTokens } from "../hooks/useTokens";
 
-import TokenSelect from "../../components/TokenSelect";
+import TokenSelect from "../components/TokenSelect";
 
 export const Trade = () => {
   const { account } = useWeb3React();
