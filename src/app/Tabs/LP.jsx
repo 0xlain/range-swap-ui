@@ -112,15 +112,26 @@ export const LP = () => {
       if (selectedMode === "Add") {
       } else if (selectedMode === "Withdraw") {
         const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
-        const coeff = BigNumber.from(10).pow(poolDecimals);
+        const poolCoeff = BigNumber.from(10).pow(poolDecimals);
         const balance = BigNumber.from(
           await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
         )
-          .div(coeff)
+          .div(poolCoeff)
           .toNumber();
 
-        if (amount > balance) {
+        if (Number(amount) > balance) {
           setAmount(balance);
+        }
+
+        const tokenCoeff = BigNumber.from(10).pow(tokenDecimals);
+        const maxRemove = BigNumber.from(
+          await RANGEPOOL_CONTRACT.methods.maxCanRemove(tokenAddress).call()
+        )
+          .div(tokenCoeff)
+          .toNumber();
+
+        if (Number(amount) > maxRemove) {
+          setAmount(maxRemove);
         }
       }
     })();
