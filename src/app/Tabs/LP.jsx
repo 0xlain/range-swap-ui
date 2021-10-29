@@ -222,6 +222,7 @@ export const LP = () => {
   }
 
   function handleWithdrawTabClick() {
+    setAmount(0);
     setSelectedMode(MODES.WITHDRAW);
   }
 
