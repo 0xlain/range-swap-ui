@@ -232,9 +232,11 @@ export const LP = () => {
 
   async function handleMaxWithdraw() {
     const currentToken = tokens.find((item) => item.symbol === token);
-    const { contract, address } = currentToken;
+    const { address } = currentToken;
 
-    const balance = Number(await contract.methods.balanceOf(account).call());
+    const balance = Number(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    );
     if (!balance) {
       return;
     }
@@ -252,9 +254,11 @@ export const LP = () => {
 
   async function handleMaxAdd() {
     const currentToken = tokens.find((item) => item.symbol === token);
-    const { contract, address } = currentToken;
+    const { address } = currentToken;
 
-    const balance = Number(await contract.methods.balanceOf(account).call());
+    const balance = Number(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    );
     if (!balance) {
       return;
     }
