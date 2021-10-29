@@ -118,11 +118,13 @@ export const Trade = () => {
         setFromAmount(maxFrom.toNumber());
       }
 
-      const allowance = await contractFrom.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
+      const allowance = BigNumber.from(
+        await contractFrom.methods.allowance(account, RANGEPOOL_ADDRESS).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-      if (allowance < fromAmount) {
+      if (allowance < Number(fromAmount)) {
         setNeedsApproval(true);
       } else {
         setNeedsApproval(false);
@@ -137,15 +139,11 @@ export const Trade = () => {
   async function handleApprove() {
     if (!addressFrom || !addressTo || !account) return;
     try {
-      const allowance = await contractFrom.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
-
       const coeff = BigNumber.from(10).pow(decimalsFrom);
       const infinite = BigNumber.from(999999999999).mul(coeff);
       const needed = BigNumber.from(fromAmount).mul(coeff);
 
-      if (allowance < fromAmount) {
+      if (needsApproval) {
         const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
 
         const gasLimit = await contractFrom.methods
@@ -158,7 +156,7 @@ export const Trade = () => {
       }
       return true;
     } catch (e) {
-      console.error("error approving");
+      console.error(e);
       return false;
     }
   }
@@ -180,7 +178,9 @@ export const Trade = () => {
       RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, needed, addressTo)
         .send({ from: account, gasLimit });
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function handleCheckboxChange() {
