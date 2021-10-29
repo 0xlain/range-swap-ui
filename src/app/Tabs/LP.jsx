@@ -110,16 +110,6 @@ export const LP = () => {
       if (!tokenAddress) return;
 
       if (selectedMode === "Add") {
-        const coeff = BigNumber.from(10).pow(tokenDecimals);
-        const maxAdd = BigNumber.from(
-          await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
-        )
-          .div(coeff)
-          .toNumber();
-
-        if (Number(amount) > maxAdd) {
-          setAmount(maxAdd);
-        }
       } else if (selectedMode === "Withdraw") {
         const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
         const coeff = BigNumber.from(10).pow(poolDecimals);
