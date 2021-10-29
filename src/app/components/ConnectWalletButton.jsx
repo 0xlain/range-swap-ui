@@ -58,7 +58,6 @@ export default function ConnectWalletButton() {
 
   return (
     <Button
-      variant="text"
       disabled={isDisabled}
       onClick={onClick}
       variant="contained"
