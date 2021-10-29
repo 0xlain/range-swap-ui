@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { BigNumber } from "@ethersproject/bignumber";
+import styled from "@emotion/styled";
 import {
   Button,
   Checkbox,
@@ -16,11 +17,21 @@ import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
 import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
 
+const TabButton = styled(Button)`
+  width: 100%;
+  height: 44px;
+`;
+
+const MODES = {
+  ADD: "Add",
+  WITHDRAW: "Withdraw",
+};
+
 export const LP = () => {
   const { account } = useWeb3React();
   const tokens = useTokens();
 
-  const [selectedMode, setSelectedMode] = useState("Add");
+  const [selectedMode, setSelectedMode] = useState(MODES.ADD);
   const [token, setToken] = useState("");
   const [amount, setAmount] = useState(0);
   const [needsApproval, setNeedsApproval] = useState(false);
@@ -104,7 +115,7 @@ export const LP = () => {
           setAmount(balance);
         }
       }
-    })()
+    })();
   }, [amount, tokenAddress, selectedMode, tokenDecimals, account]);
 
   useEffect(() => {
@@ -120,7 +131,7 @@ export const LP = () => {
       } else {
         setNeedsApproval(false);
       }
-    })()
+    })();
   }, [account, tokenContract, amount]);
 
   async function handleApprove() {
@@ -168,7 +179,7 @@ export const LP = () => {
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .send({ from: account, gasLimit });
-    } catch { }
+    } catch {}
   }
 
   async function handleWithdraw() {
@@ -184,7 +195,7 @@ export const LP = () => {
       RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, needed)
         .send({ from: account, gasLimit });
-    } catch { }
+    } catch {}
   }
 
   function handleAmountChange(e) {
@@ -192,11 +203,11 @@ export const LP = () => {
   }
 
   function handleAddTabClick() {
-    setSelectedMode("Add");
+    setSelectedMode(MODES.ADD);
   }
 
   function handleWithdrawTabClick() {
-    setSelectedMode("Withdraw");
+    setSelectedMode(MODES.WITHDRAW);
   }
 
   function handleCheckboxChange() {
@@ -213,31 +224,22 @@ export const LP = () => {
     >
       <Grid item container spacing={1}>
         <Grid item xs>
-          <Button
-            sx={{
-              width: "100%",
-              height: "44px",
-              background: selectedMode === "Add" ? "#0A0717CC" : "#896BFE26",
-            }}
+          <TabButton
             variant="contained"
+            isSelected={selectedMode === MODES.ADD}
             onClick={handleAddTabClick}
           >
             Add
-          </Button>
+          </TabButton>
         </Grid>
         <Grid item xs>
-          <Button
-            sx={{
-              width: "100%",
-              height: "44px",
-              background:
-                selectedMode === "Withdraw" ? "#0A0717CC" : "#896BFE26",
-            }}
+          <TabButton
+            isSelected={selectedMode === MODES.WITHDRAW}
             variant="contained"
             onClick={handleWithdrawTabClick}
           >
             Withdraw
-          </Button>
+          </TabButton>
         </Grid>
       </Grid>
       <Grid item>
