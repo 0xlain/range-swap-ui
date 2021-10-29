@@ -145,9 +145,13 @@ export const Trade = () => {
       if (allowance < fromAmount) {
         const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
 
+        const gasLimit = await contractFrom.methods
+          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+          .estimateGas({ from: account });
+
         await contractFrom.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .send({ from: account });
+          .send({ from: account, gasLimit });
       }
       return true;
     } catch (e) {
@@ -166,9 +170,14 @@ export const Trade = () => {
     const needed = BigNumber.from(fromAmount).mul(coeff);
 
     try {
+
+      const gasLimit = await RANGEPOOL_CONTRACT.methods
+        .swap(addressFrom, needed, addressTo)
+        .estimateGas({ from: account });
+        
       RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, needed, addressTo)
-        .send({ from: account });
+        .send({ from: account, gasLimit });
     } catch { }
   }
 
