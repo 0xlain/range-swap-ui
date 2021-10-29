@@ -43,7 +43,7 @@ export const Warning = () => {
   }
 
   const handleDismiss = () => {
-      setShowWarning(false)
+    setShowWarning(false);
     localStorage.setItem(SHOW_WARNING_KEY, true);
   };
 
