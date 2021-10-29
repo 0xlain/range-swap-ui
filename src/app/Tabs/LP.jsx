@@ -113,9 +113,11 @@ export const LP = () => {
         const coeff = BigNumber.from(10).pow(tokenDecimals);
         const maxAdd = BigNumber.from(
           await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
-        ).div(coeff);
+        )
+          .div(coeff)
+          .toNumber();
 
-        if (amount > maxAdd.toNumber()) {
+        if (Number(amount) > maxAdd) {
           setAmount(maxAdd);
         }
       } else if (selectedMode === "Withdraw") {
@@ -123,9 +125,11 @@ export const LP = () => {
         const coeff = BigNumber.from(10).pow(poolDecimals);
         const balance = BigNumber.from(
           await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-        ).div(coeff);
+        )
+          .div(coeff)
+          .toNumber();
 
-        if (amount > balance.toNumber()) {
+        if (amount > balance) {
           setAmount(balance);
         }
       }
@@ -135,12 +139,15 @@ export const LP = () => {
   useEffect(() => {
     (async () => {
       if (!tokenContract || !account) return;
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
 
-      const allowance = await tokenContract.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
+      const allowance = BigNumber.from(
+        await tokenContract.methods.allowance(account, RANGEPOOL_ADDRESS).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-      if (allowance < amount) {
+      if (allowance < Number(amount)) {
         setNeedsApproval(true);
       } else {
         setNeedsApproval(false);
@@ -150,29 +157,25 @@ export const LP = () => {
 
   async function handleApprove() {
     if (!tokenAddress || !account) return;
+    if (!needsApproval) return true;
     try {
-      const allowance = await tokenContract.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
-
       const coeff = BigNumber.from(10).pow(tokenDecimals);
       const infinite = BigNumber.from(999999999999).mul(coeff);
       const needed = BigNumber.from(amount).mul(coeff);
 
-      if (allowance < amount) {
-        const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+      const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
 
-        const gasLimit = await tokenContract.methods
-          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .estimateGas({ from: account });
+      const gasLimit = await tokenContract.methods
+        .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+        .estimateGas({ from: account });
 
-        await tokenContract.methods
-          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .send({ from: account, gasLimit });
-      }
+      await tokenContract.methods
+        .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+        .send({ from: account, gasLimit });
+
       return true;
     } catch (e) {
-      console.error("error approving");
+      console.error(e);
       return false;
     }
   }
@@ -183,17 +186,19 @@ export const LP = () => {
     const success = await handleApprove();
     if (!success) return;
 
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
-    const needed = BigNumber.from(amount).mul(coeff);
-
     try {
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const needed = BigNumber.from(amount).mul(coeff);
+
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .send({ from: account, gasLimit });
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function handleWithdraw() {
