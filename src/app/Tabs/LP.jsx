@@ -20,6 +20,19 @@ import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
 const TabButton = styled(Button)`
   width: 100%;
   height: 44px;
+  background: ${({ isSelected }) => (isSelected ? "#896BFE26" : "#0A0717CC")};
+  color: ${({ isSelected }) => (isSelected ? "#FFFFFF" : "#896BFEB0")};
+  background-clip: padding-box, border-box;
+  border: ${({ isSelected }) =>
+    isSelected ? "solid 1px transparent" : "none"};
+  border-radius: 5 px;
+  background-origin: border-box;
+  background-image: ${({ isSelected }) =>
+    isSelected
+      ? `
+        linear-gradient(rgba(36, 28, 66, 0.993), rgba(36, 28, 66, 0.993)),
+        linear-gradient(180deg, #876cf4 0%, #ff6d41 100%)`
+      : "none"};
 `;
 
 const MODES = {
