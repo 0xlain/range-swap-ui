@@ -21,7 +21,8 @@ export function useTokens() {
             const address = await RANGEPOOL_CONTRACT.methods.tokens(i).call();
             const token = new Token(address, library.currentProvider);
             await token.getSymbol();
-            if (token.symbol === "USDC" || token.symbol === "USDT") resolve();
+            await token.getInfo();
+            if (token.info.accepting !== true) resolve();
             await token.getDecimals();
             resolve(token);
           } catch {
