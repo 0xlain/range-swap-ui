@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/range-swap-ui/static/css/main.2ae47eeb.chunk.css",
-    "main.js": "/range-swap-ui/static/js/main.781e2bda.chunk.js",
-    "main.js.map": "/range-swap-ui/static/js/main.781e2bda.chunk.js.map",
+    "main.js": "/range-swap-ui/static/js/main.584e1c27.chunk.js",
+    "main.js.map": "/range-swap-ui/static/js/main.584e1c27.chunk.js.map",
     "runtime-main.js": "/range-swap-ui/static/js/runtime-main.29791b65.js",
     "runtime-main.js.map": "/range-swap-ui/static/js/runtime-main.29791b65.js.map",
-    "static/js/2.f176292c.chunk.js": "/range-swap-ui/static/js/2.f176292c.chunk.js",
-    "static/js/2.f176292c.chunk.js.map": "/range-swap-ui/static/js/2.f176292c.chunk.js.map",
+    "static/js/2.36d9e711.chunk.js": "/range-swap-ui/static/js/2.36d9e711.chunk.js",
+    "static/js/2.36d9e711.chunk.js.map": "/range-swap-ui/static/js/2.36d9e711.chunk.js.map",
     "index.html": "/range-swap-ui/index.html",
     "static/css/main.2ae47eeb.chunk.css.map": "/range-swap-ui/static/css/main.2ae47eeb.chunk.css.map",
-    "static/js/2.f176292c.chunk.js.LICENSE.txt": "/range-swap-ui/static/js/2.f176292c.chunk.js.LICENSE.txt",
+    "static/js/2.36d9e711.chunk.js.LICENSE.txt": "/range-swap-ui/static/js/2.36d9e711.chunk.js.LICENSE.txt",
     "static/media/RangeSwap.fbe50421.svg": "/range-swap-ui/static/media/RangeSwap.fbe50421.svg",
     "static/media/SwapIcon.75667e99.svg": "/range-swap-ui/static/media/SwapIcon.75667e99.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.29791b65.js",
-    "static/js/2.f176292c.chunk.js",
+    "static/js/2.36d9e711.chunk.js",
     "static/css/main.2ae47eeb.chunk.css",
-    "static/js/main.781e2bda.chunk.js"
+    "static/js/main.584e1c27.chunk.js"
   ]
 }
