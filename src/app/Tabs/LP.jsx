@@ -10,6 +10,7 @@ import {
   Paper,
   TextField,
   Typography,
+  InputAdornment,
 } from "@mui/material";
 
 import TokenSelect from "../components/TokenSelect";
@@ -104,7 +105,7 @@ export const LP = () => {
           setAmount(balance);
         }
       }
-    })()
+    })();
   }, [amount, tokenAddress, selectedMode, tokenDecimals, account]);
 
   useEffect(() => {
@@ -120,7 +121,7 @@ export const LP = () => {
       } else {
         setNeedsApproval(false);
       }
-    })()
+    })();
   }, [account, tokenContract, amount]);
 
   async function handleApprove() {
@@ -168,7 +169,7 @@ export const LP = () => {
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .send({ from: account, gasLimit });
-    } catch { }
+    } catch {}
   }
 
   async function handleWithdraw() {
@@ -184,7 +185,7 @@ export const LP = () => {
       RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, needed)
         .send({ from: account, gasLimit });
-    } catch { }
+    } catch {}
   }
 
   function handleAmountChange(e) {
@@ -192,6 +193,7 @@ export const LP = () => {
   }
 
   function handleAddTabClick() {
+    setAmount(0);
     setSelectedMode("Add");
   }
 
@@ -201,6 +203,46 @@ export const LP = () => {
 
   function handleCheckboxChange() {
     setEnableInfiniteAllowance(!enableInfiniteAllowance);
+  }
+
+  async function handleMaxWithdraw() {
+    const currentToken = tokens.find((item) => item.symbol === token);
+    const { contract, address } = currentToken;
+
+    const balance = Number(await contract.methods.balanceOf(account).call());
+    if (!balance) {
+      return;
+    }
+
+    const maxCanRemove = await RANGEPOOL_CONTRACT.methods
+      .maxCanRemove(address)
+      .call();
+
+    if (maxCanRemove > balance) {
+      setAmount(balance);
+    } else {
+      setAmount(maxCanRemove);
+    }
+  }
+
+  async function handleMaxAdd() {
+    const currentToken = tokens.find((item) => item.symbol === token);
+    const { contract, address } = currentToken;
+
+    const balance = Number(await contract.methods.balanceOf(account).call());
+    if (!balance) {
+      return;
+    }
+
+    const maxCanAdd = await RANGEPOOL_CONTRACT.methods
+      .maxCanAdd(address)
+      .call();
+
+    if (maxCanAdd > balance) {
+      setAmount(balance);
+    } else {
+      setAmount(maxCanAdd);
+    }
   }
 
   return (
@@ -255,7 +297,22 @@ export const LP = () => {
               label="Amount"
               value={amount}
               onChange={handleAmountChange}
-              InputProps={{ inputProps: { min: 0 } }}
+              InputProps={{
+                inputProps: { min: 0 },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      onClick={
+                        selectedMode === "Withdraw"
+                          ? handleMaxWithdraw
+                          : handleMaxAdd
+                      }
+                    >
+                      Max
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
               type="number"
             />
           </Paper>
