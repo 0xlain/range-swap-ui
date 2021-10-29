@@ -74,6 +74,7 @@ export const LP = () => {
   useEffect(() => {
     if (!token) return;
     const newToken = tokens?.find((item) => item.symbol === token);
+    if (!newToken) return;
     setTokenContract(newToken.contract);
     setTokenDecimals(newToken.decimals);
     setTokenAddress(newToken.address);
