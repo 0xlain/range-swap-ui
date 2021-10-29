@@ -88,42 +88,44 @@ export const Trade = () => {
     setAddressTo(token.address);
   }, [toToken, tokens]);
 
-  useEffect(async () => {
-    if (!addressFrom || !addressTo || !account) return;
+  useEffect(() => {
+    (async () => {
+      if (!addressFrom || !addressTo || !account) return;
 
-    const coeff = BigNumber.from(10).pow(decimalsFrom);
+      const coeff = BigNumber.from(10).pow(decimalsFrom);
 
-    const maxTo = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressFrom, addressTo).call()
-    ).div(coeff);
+      const maxTo = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressFrom, addressTo).call()
+      ).div(coeff);
 
-    const maxFrom = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressTo, addressFrom).call()
-    ).div(coeff);
+      const maxFrom = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressTo, addressFrom).call()
+      ).div(coeff);
 
-    const amountOut = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods
-        .amountOut(addressFrom, fromAmount, addressTo)
-        .call()
-    );
+      const amountOut = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods
+          .amountOut(addressFrom, fromAmount, addressTo)
+          .call()
+      );
 
-    if (amountOut.lte(maxTo)) {
-      setToAmount(amountOut);
-    } else {
-      setToAmount(maxTo.toNumber());
-      setFromAmount(maxFrom.toNumber());
-    }
+      if (amountOut.lte(maxTo)) {
+        setToAmount(amountOut);
+      } else {
+        setToAmount(maxTo.toNumber());
+        setFromAmount(maxFrom.toNumber());
+      }
 
-    const allowance = await contractFrom.methods
-      .allowance(RANGEPOOL_ADDRESS, account)
-      .call();
+      const allowance = await contractFrom.methods
+        .allowance(RANGEPOOL_ADDRESS, account)
+        .call();
 
-    if (allowance < fromAmount) {
-      setNeedsApproval(true);
-    } else {
-      setNeedsApproval(false);
-    }
-  }, [addressFrom, addressTo, fromAmount, account]);
+      if (allowance < fromAmount) {
+        setNeedsApproval(true);
+      } else {
+        setNeedsApproval(false);
+      }
+    })()
+  }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
 
   function handleFromAmountChange(e) {
     setFromAmount(e.target.value);
@@ -167,7 +169,7 @@ export const Trade = () => {
       RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, needed, addressTo)
         .send({ from: account });
-    } catch {}
+    } catch { }
   }
 
   function handleCheckboxChange() {

@@ -80,43 +80,47 @@ export const LP = () => {
     setTokenAddress(newToken.address);
   }, [token, tokens]);
 
-  useEffect(async () => {
-    if (!tokenAddress) return;
+  useEffect(() => {
+    (async () => {
+      if (!tokenAddress) return;
 
-    if (selectedMode === "Add") {
-      const coeff = BigNumber.from(10).pow(tokenDecimals);
-      const maxAdd = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
-      ).div(coeff);
+      if (selectedMode === "Add") {
+        const coeff = BigNumber.from(10).pow(tokenDecimals);
+        const maxAdd = BigNumber.from(
+          await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
+        ).div(coeff);
 
-      if (amount > maxAdd.toNumber()) {
-        setAmount(maxAdd);
+        if (amount > maxAdd.toNumber()) {
+          setAmount(maxAdd);
+        }
+      } else if (selectedMode === "Withdraw") {
+        const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
+        const coeff = BigNumber.from(10).pow(poolDecimals);
+        const balance = BigNumber.from(
+          await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+        ).div(coeff);
+
+        if (amount > balance.toNumber()) {
+          setAmount(balance);
+        }
       }
-    } else if (selectedMode === "Withdraw") {
-      const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
-      const coeff = BigNumber.from(10).pow(poolDecimals);
-      const balance = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-      ).div(coeff);
+    })()
+  }, [amount, tokenAddress, selectedMode, tokenDecimals, account]);
 
-      if (amount > balance.toNumber()) {
-        setAmount(balance);
+  useEffect(() => {
+    (async () => {
+      if (!tokenContract || !account) return;
+
+      const allowance = await tokenContract.methods
+        .allowance(RANGEPOOL_ADDRESS, account)
+        .call();
+
+      if (allowance < amount) {
+        setNeedsApproval(true);
+      } else {
+        setNeedsApproval(false);
       }
-    }
-  }, [amount, tokenAddress, selectedMode]);
-
-  useEffect(async () => {
-    if (!tokenContract || !account) return;
-
-    const allowance = await tokenContract.methods
-      .allowance(RANGEPOOL_ADDRESS, account)
-      .call();
-
-    if (allowance < amount) {
-      setNeedsApproval(true);
-    } else {
-      setNeedsApproval(false);
-    }
+    })()
   }, [account, tokenContract, amount]);
 
   async function handleApprove() {
@@ -157,7 +161,7 @@ export const LP = () => {
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .send({ from: account });
-    } catch {}
+    } catch { }
   }
 
   async function handleWithdraw() {
@@ -170,7 +174,7 @@ export const LP = () => {
       RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, needed)
         .send({ from: account });
-    } catch {}
+    } catch { }
   }
 
   function handleAmountChange(e) {
