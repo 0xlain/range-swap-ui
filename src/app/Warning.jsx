@@ -29,8 +29,12 @@ const WarningText = styled.p`
   line-height: 100%;
 
   letter-spacing: -0.02em;
-
+  margin-left: 0 8px;
   color: #191332;
+`;
+
+const StyledIconButton = styled(IconButton)`
+  padding: 4px;
 `;
 
 export const Warning = () => {
@@ -53,9 +57,9 @@ export const Warning = () => {
       <WarningText>
         Rangeswap is <b>not audited</b>. Use at your own risk.
       </WarningText>
-      <IconButton onClick={handleDismiss}>
+      <StyledIconButton onClick={handleDismiss}>
         <CloseIcon />
-      </IconButton>
+      </StyledIconButton>
     </WarningWrapper>
   ) : null;
 };
