@@ -137,9 +137,13 @@ export const LP = () => {
       if (allowance < amount) {
         const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
 
+        const gasLimit = await tokenContract.methods
+          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+          .estimateGas({ from: account });
+
         await tokenContract.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .send({ from: account });
+          .send({ from: account, gasLimit });
       }
       return true;
     } catch (e) {
@@ -158,9 +162,12 @@ export const LP = () => {
     const needed = BigNumber.from(amount).mul(coeff);
 
     try {
+      const gasLimit = await RANGEPOOL_CONTRACT.methods
+        .add(tokenAddress, needed)
+        .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
-        .send({ from: account });
+        .send({ from: account, gasLimit });
     } catch { }
   }
 
@@ -171,9 +178,12 @@ export const LP = () => {
     const needed = BigNumber.from(amount).mul(coeff);
 
     try {
+      const gasLimit = await RANGEPOOL_CONTRACT.methods
+        .remove(tokenAddress, needed)
+        .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, needed)
-        .send({ from: account });
+        .send({ from: account, gasLimit });
     } catch { }
   }
 
