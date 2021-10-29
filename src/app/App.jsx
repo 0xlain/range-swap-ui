@@ -1,8 +1,9 @@
 import React from "react";
-import { Container,  } from "@mui/material";
+import { Container } from "@mui/material";
 import styled from "@emotion/styled";
 import { Header } from "./Header";
 import { Tabs } from "./Tabs/index";
+import { Warning } from "./Warning";
 
 const AppContainer = styled(Container)`
   background: radial-gradient(
@@ -34,6 +35,7 @@ export const App = () => {
   return (
     <AppContainer disableGutters maxWidth={false}>
       <Header />
+      <Warning />
       <Tabs />
     </AppContainer>
   );
