@@ -8,6 +8,7 @@ import {
   FormGroup,
   Grid,
   IconButton,
+  InputAdornment,
   Paper,
   TextField,
 } from "@mui/material";
@@ -220,8 +221,13 @@ export const Trade = () => {
               label="Amount"
               value={fromAmount}
               onChange={handleFromAmountChange}
-              InputProps={{ inputProps: { min: 0 } }}
               type="number"
+              InputProps={{
+                inputProps: { min: 0 },
+                endAdornment: <InputAdornment position="end">
+                  <Button>Max</Button>
+                </InputAdornment>
+              }}
             />
           </Paper>
         </Grid>

@@ -7,6 +7,7 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
+  InputAdornment,
   Paper,
   TextField,
   Typography,
@@ -255,8 +256,13 @@ export const LP = () => {
               label="Amount"
               value={amount}
               onChange={handleAmountChange}
-              InputProps={{ inputProps: { min: 0 } }}
               type="number"
+              InputProps={{
+                inputProps: { min: 0 },
+                endAdornment: <InputAdornment position="end">
+                  <Button>Max</Button>
+                </InputAdornment>
+              }}
             />
           </Paper>
         </Grid>
