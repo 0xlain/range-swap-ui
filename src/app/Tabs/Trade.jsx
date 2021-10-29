@@ -13,14 +13,13 @@ import {
 } from "@mui/material";
 import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 
-import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
 import { useTokens } from "../hooks/useTokens";
-
+import { useRangepool } from "../hooks/useRangepool";
 import TokenSelect from "../components/TokenSelect";
 
 export const Trade = () => {
   const { account } = useWeb3React();
-
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
   const tokens = useTokens();
 
   const [fromToken, setFromToken] = useState("");
@@ -95,11 +94,15 @@ export const Trade = () => {
       const coeff = BigNumber.from(10).pow(decimalsFrom);
 
       const maxTo = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressFrom, addressTo).call()
+        await RANGEPOOL_CONTRACT.methods
+          .maxCanSwap(addressFrom, addressTo)
+          .call()
       ).div(coeff);
 
       const maxFrom = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressTo, addressFrom).call()
+        await RANGEPOOL_CONTRACT.methods
+          .maxCanSwap(addressTo, addressFrom)
+          .call()
       ).div(coeff);
 
       const amountOut = BigNumber.from(
@@ -124,7 +127,7 @@ export const Trade = () => {
       } else {
         setNeedsApproval(false);
       }
-    })()
+    })();
   }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
 
   function handleFromAmountChange(e) {
@@ -170,15 +173,14 @@ export const Trade = () => {
     const needed = BigNumber.from(fromAmount).mul(coeff);
 
     try {
-
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, needed, addressTo)
         .estimateGas({ from: account });
-        
+
       RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, needed, addressTo)
         .send({ from: account, gasLimit });
-    } catch { }
+    } catch {}
   }
 
   function handleCheckboxChange() {

@@ -15,7 +15,7 @@ import {
 
 import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
-import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
+import { useRangepool } from "../hooks/useRangepool";
 
 const TabButton = styled(Button)`
   width: 100%;
@@ -43,6 +43,7 @@ const MODES = {
 export const LP = () => {
   const { account } = useWeb3React();
   const tokens = useTokens();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
 
   const [selectedMode, setSelectedMode] = useState(MODES.ADD);
   const [token, setToken] = useState("");
