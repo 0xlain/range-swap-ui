@@ -30,6 +30,7 @@ export function useTokens() {
             await token.getInfo();
             if (token.info.accepting !== true) resolve();
             await token.getDecimals();
+            await token.getMaxAdd();
             resolve(token);
           } catch {
             resolve();
