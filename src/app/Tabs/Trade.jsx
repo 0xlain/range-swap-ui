@@ -97,25 +97,23 @@ export const Trade = () => {
         await RANGEPOOL_CONTRACT.methods
           .maxCanSwap(addressFrom, addressTo)
           .call()
-      ).div(coeff);
-
-      const maxFrom = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods
-          .maxCanSwap(addressTo, addressFrom)
-          .call()
-      ).div(coeff);
+      )
+        .div(coeff)
+        .toNumber();
 
       const amountOut = BigNumber.from(
         await RANGEPOOL_CONTRACT.methods
           .amountOut(addressFrom, fromAmount, addressTo)
           .call()
-      );
+      ).toNumber();
 
-      if (amountOut.lte(maxTo)) {
+      if (amountOut < maxTo) {
         setToAmount(amountOut);
       } else {
-        setToAmount(maxTo.toNumber());
-        setFromAmount(maxFrom.toNumber());
+        setToAmount(maxTo);
+        //idk if this is the correct way to set the from amount,
+        //we want to cap it once the maxTo amount is reached
+        setFromAmount(maxTo);
       }
 
       const allowance = BigNumber.from(
