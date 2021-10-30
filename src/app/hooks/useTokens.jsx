@@ -28,7 +28,10 @@ export function useTokens() {
             );
             await token.getSymbol();
             await token.getInfo();
-            if (token.info.accepting !== true) resolve();
+            if (token.info.accepting === false) {
+              resolve();
+              return;
+            }
             await token.getDecimals();
             token.getMaxAdd();
             resolve(token);
