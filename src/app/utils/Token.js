@@ -1,3 +1,4 @@
+import { BigNumber } from "@ethersproject/bignumber";
 import { erc20_interface } from "./constants";
 
 const Contract = require("web3-eth-contract");
@@ -24,5 +25,16 @@ export default class Token {
 
   async getDecimals() {
     this.decimals = await this.contract.methods.decimals().call();
+  }
+
+  async getLiquidity() {
+    const coeff = BigNumber.from(10).pow(this.decimals);
+    const balance = BigNumber.from(
+      await this.contract.methods
+        .balanceOf(this.rangepoolContract._address)
+        .call()
+    ).div(coeff);
+
+    this.liquidity = balance.toNumber();
   }
 }
