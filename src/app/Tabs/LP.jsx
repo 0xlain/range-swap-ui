@@ -59,6 +59,7 @@ export const LP = () => {
   const [tokenContract, setTokenContract] = useState();
   const [tokenDecimals, setTokenDecimals] = useState();
   const [tokenAddress, setTokenAddress] = useState();
+  const [tokenInfo, setTokenInfo] = useState();
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
   useEffect(() => {
@@ -104,22 +105,61 @@ export const LP = () => {
     setTokenContract(newToken.contract);
     setTokenDecimals(newToken.decimals);
     setTokenAddress(newToken.address);
+    setTokenInfo(newToken.info);
   }, [token, tokens]);
+
+  async function _maxCanAdd(incoming) {
+    try {
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const totalTokens = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.totalTokens().call()
+      )
+        .div(BigNumber.from(10).pow(18))
+        .add(BigNumber.from(incoming));
+
+      const highAP = BigNumber.from(tokenInfo.highAP);
+      const maximum = totalTokens.mul(highAP).div(BigNumber.from(10).pow(9));
+
+      const balance = BigNumber.from(
+        await tokenContract.methods.balanceOf(RANGEPOOL_ADDRESS).call()
+      ).div(coeff);
+
+      const maxCanAdd = maximum.sub(balance).toNumber();
+      return maxCanAdd;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function getMaxAdd() {
+    try {
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const max = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
+      ).div(coeff);
+
+      let lastMax = 0;
+      let currentMax = max.toNumber();
+
+      while (lastMax !== currentMax) {
+        lastMax = currentMax;
+        currentMax = await _maxCanAdd(lastMax);
+      }
+
+      return currentMax;
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   useEffect(() => {
     (async () => {
       if (!tokenAddress) return;
 
       if (selectedMode === "Add") {
-        const coeff = BigNumber.from(10).pow(tokenDecimals);
-        const maxCanAdd = BigNumber.from(
-          await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
-        )
-          .div(coeff)
-          .toNumber();
-
-        if (amount > maxCanAdd) {
-          setAmount(maxCanAdd);
+        const maxAdd = await getMaxAdd(amount);
+        if (amount > maxAdd) {
+          setAmount(maxAdd);
         }
       } else if (selectedMode === "Withdraw") {
         const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
@@ -273,7 +313,6 @@ export const LP = () => {
 
   async function handleMaxAdd() {
     const currentToken = tokens.find((item) => item.symbol === token);
-    const { address } = currentToken;
 
     const coeff = BigNumber.from(10).pow(tokenDecimals);
     const balance = BigNumber.from(
@@ -282,16 +321,12 @@ export const LP = () => {
       .div(coeff)
       .toNumber();
 
-    const maxCanAdd = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()
-    )
-      .div(coeff)
-      .toNumber();
+    const maxAdd = await getMaxAdd();
 
-    if (maxCanAdd > balance) {
+    if (maxAdd > balance) {
       setAmount(balance);
     } else {
-      setAmount(maxCanAdd);
+      setAmount(maxAdd);
     }
   }
 
