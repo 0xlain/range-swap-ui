@@ -30,7 +30,9 @@ export default class Token {
   async getLiquidity() {
     const coeff = BigNumber.from(10).pow(this.decimals);
     const balance = BigNumber.from(
-      await this.contract.methods.balanceOf(this.address).call()
+      await this.contract.methods
+        .balanceOf(this.rangepoolContract._address)
+        .call()
     ).div(coeff);
 
     this.liquidity = balance.toNumber();
