@@ -33,7 +33,11 @@ export function useTokens() {
               return;
             }
             await token.getDecimals();
+
             token.getMaxAdd();
+
+            await token.getLiquidity();
+
             resolve(token);
           } catch {
             resolve();
