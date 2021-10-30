@@ -17,6 +17,7 @@ import {
 import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
+import { ROUNDING_DECIMALS } from "../utils/constants";
 
 const TabButton = styled(Button)`
   width: 100%;
@@ -40,8 +41,6 @@ const MODES = {
   ADD: "Add",
   WITHDRAW: "Withdraw",
 };
-
-const ROUNDING_DECIMALS = 4;
 
 export const LP = () => {
   const { account } = useWeb3React();
