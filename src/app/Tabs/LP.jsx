@@ -263,16 +263,16 @@ export const LP = () => {
     const currentToken = tokens.find((item) => item.symbol === token);
     const { address } = currentToken;
 
-    const balance = Number(
-      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    );
+    const balance =
+      Number(await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()) /
+      10 ** tokenDecimals;
     if (!balance) {
       return;
     }
 
-    const maxCanAdd = await RANGEPOOL_CONTRACT.methods
-      .maxCanAdd(address)
-      .call();
+    const maxCanAdd =
+      (await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()) /
+      10 ** tokenDecimals;
 
     if (maxCanAdd > balance) {
       setAmount(balance);
