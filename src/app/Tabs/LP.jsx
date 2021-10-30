@@ -16,7 +16,7 @@ import {
 
 import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
-import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
+import { useRangepool } from "../hooks/useRangepool";
 
 const TabButton = styled(Button)`
   width: 100%;
@@ -44,6 +44,7 @@ const MODES = {
 export const LP = () => {
   const { account } = useWeb3React();
   const tokens = useTokens();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
 
   const [selectedMode, setSelectedMode] = useState(MODES.ADD);
   const [token, setToken] = useState("");
@@ -110,23 +111,28 @@ export const LP = () => {
       if (!tokenAddress) return;
 
       if (selectedMode === "Add") {
-        const coeff = BigNumber.from(10).pow(tokenDecimals);
-        const maxAdd = BigNumber.from(
-          await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
-        ).div(coeff);
-
-        if (amount > maxAdd.toNumber()) {
-          setAmount(maxAdd);
-        }
       } else if (selectedMode === "Withdraw") {
         const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
-        const coeff = BigNumber.from(10).pow(poolDecimals);
+        const poolCoeff = BigNumber.from(10).pow(poolDecimals);
         const balance = BigNumber.from(
           await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-        ).div(coeff);
+        )
+          .div(poolCoeff)
+          .toNumber();
 
-        if (amount > balance.toNumber()) {
+        if (Number(amount) > balance) {
           setAmount(balance);
+        }
+
+        const tokenCoeff = BigNumber.from(10).pow(tokenDecimals);
+        const maxRemove = BigNumber.from(
+          await RANGEPOOL_CONTRACT.methods.maxCanRemove(tokenAddress).call()
+        )
+          .div(tokenCoeff)
+          .toNumber();
+
+        if (Number(amount) > maxRemove) {
+          setAmount(maxRemove);
         }
       }
     })();
@@ -135,12 +141,15 @@ export const LP = () => {
   useEffect(() => {
     (async () => {
       if (!tokenContract || !account) return;
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
 
-      const allowance = await tokenContract.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
+      const allowance = BigNumber.from(
+        await tokenContract.methods.allowance(account, RANGEPOOL_ADDRESS).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-      if (allowance < amount) {
+      if (allowance < Number(amount)) {
         setNeedsApproval(true);
       } else {
         setNeedsApproval(false);
@@ -150,29 +159,25 @@ export const LP = () => {
 
   async function handleApprove() {
     if (!tokenAddress || !account) return;
+    if (!needsApproval) return true;
     try {
-      const allowance = await tokenContract.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
-
       const coeff = BigNumber.from(10).pow(tokenDecimals);
       const infinite = BigNumber.from(999999999999).mul(coeff);
       const needed = BigNumber.from(amount).mul(coeff);
 
-      if (allowance < amount) {
-        const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+      const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
 
-        const gasLimit = await tokenContract.methods
-          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .estimateGas({ from: account });
+      const gasLimit = await tokenContract.methods
+        .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+        .estimateGas({ from: account });
 
-        await tokenContract.methods
-          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .send({ from: account, gasLimit });
-      }
+      await tokenContract.methods
+        .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+        .send({ from: account, gasLimit });
+
       return true;
     } catch (e) {
-      console.error("error approving");
+      console.error(e);
       return false;
     }
   }
@@ -183,17 +188,19 @@ export const LP = () => {
     const success = await handleApprove();
     if (!success) return;
 
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
-    const needed = BigNumber.from(amount).mul(coeff);
-
     try {
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const needed = BigNumber.from(amount).mul(coeff);
+
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
         .send({ from: account, gasLimit });
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function handleWithdraw() {
