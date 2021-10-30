@@ -1,10 +1,12 @@
 import { useWeb3React } from "@web3-react/core";
 import { useEffect, useState } from "react";
-import { NUM_TOKENS, RANGEPOOL_CONTRACT } from "../utils/constants";
+import { NUM_TOKENS } from "../utils/constants";
 import Token from "../utils/Token";
+import { useRangepool } from "./useRangepool";
 
 export function useTokens() {
   const { library } = useWeb3React();
+  const { RANGEPOOL_CONTRACT } = useRangepool();
 
   const [tokens, setTokens] = useState([]);
 
@@ -19,7 +21,11 @@ export function useTokens() {
         new Promise(async (resolve, reject) => {
           try {
             const address = await RANGEPOOL_CONTRACT.methods.tokens(i).call();
-            const token = new Token(address, library.currentProvider);
+            const token = new Token(
+              address,
+              library.currentProvider,
+              RANGEPOOL_CONTRACT
+            );
             await token.getSymbol();
             await token.getInfo();
             if (token.info.accepting !== true) resolve();
