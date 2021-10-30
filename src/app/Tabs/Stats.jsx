@@ -61,7 +61,7 @@ export const Stats = () => {
         <TableHeader>Liquidity</TableHeader>
       </RowWrapper>
       {tokens.map((token, i) => (
-        <RowWrapper withBackground={i % 2}>
+        <RowWrapper key={token.symbol} withBackground={i % 2}>
           <TokenName>{token.symbol}</TokenName>
           <TokenLiquidity>{token.liquidity}</TokenLiquidity>
         </RowWrapper>
