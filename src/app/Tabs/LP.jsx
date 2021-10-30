@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { BigNumber } from "@ethersproject/bignumber";
+import styled from "@emotion/styled";
 import {
   Button,
   Checkbox,
@@ -10,17 +11,42 @@ import {
   Paper,
   TextField,
   Typography,
+  InputAdornment,
 } from "@mui/material";
 
 import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
-import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
+import { useRangepool } from "../hooks/useRangepool";
+
+const TabButton = styled(Button)`
+  width: 100%;
+  height: 44px;
+  background: ${({ isSelected }) => (isSelected ? "#896BFE26" : "#0A0717CC")};
+  color: ${({ isSelected }) => (isSelected ? "#FFFFFF" : "#896BFEB0")};
+  background-clip: padding-box, border-box;
+  border: ${({ isSelected }) =>
+    isSelected ? "solid 1px transparent" : "none"};
+  border-radius: 5 px;
+  background-origin: border-box;
+  background-image: ${({ isSelected }) =>
+    isSelected
+      ? `
+        linear-gradient(rgba(36, 28, 66, 0.993), rgba(36, 28, 66, 0.993)),
+        linear-gradient(180deg, #876cf4 0%, #ff6d41 100%)`
+      : "none"};
+`;
+
+const MODES = {
+  ADD: "Add",
+  WITHDRAW: "Withdraw",
+};
 
 export const LP = () => {
   const { account } = useWeb3React();
   const tokens = useTokens();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
 
-  const [selectedMode, setSelectedMode] = useState("Add");
+  const [selectedMode, setSelectedMode] = useState(MODES.ADD);
   const [token, setToken] = useState("");
   const [amount, setAmount] = useState(0);
   const [needsApproval, setNeedsApproval] = useState(false);
@@ -74,71 +100,84 @@ export const LP = () => {
   useEffect(() => {
     if (!token) return;
     const newToken = tokens?.find((item) => item.symbol === token);
+    if (!newToken) return;
     setTokenContract(newToken.contract);
     setTokenDecimals(newToken.decimals);
     setTokenAddress(newToken.address);
   }, [token, tokens]);
 
-  useEffect(async () => {
-    if (!tokenAddress) return;
+  useEffect(() => {
+    (async () => {
+      if (!tokenAddress) return;
 
-    if (selectedMode === "Add") {
+      if (selectedMode === "Add") {
+      } else if (selectedMode === "Withdraw") {
+        const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
+        const poolCoeff = BigNumber.from(10).pow(poolDecimals);
+        const balance = BigNumber.from(
+          await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+        )
+          .div(poolCoeff)
+          .toNumber();
+
+        if (Number(amount) > balance) {
+          setAmount(balance);
+        }
+
+        const tokenCoeff = BigNumber.from(10).pow(tokenDecimals);
+        const maxRemove = BigNumber.from(
+          await RANGEPOOL_CONTRACT.methods.maxCanRemove(tokenAddress).call()
+        )
+          .div(tokenCoeff)
+          .toNumber();
+
+        if (Number(amount) > maxRemove) {
+          setAmount(maxRemove);
+        }
+      }
+    })();
+  }, [amount, tokenAddress, selectedMode, tokenDecimals, account]);
+
+  useEffect(() => {
+    (async () => {
+      if (!tokenContract || !account) return;
       const coeff = BigNumber.from(10).pow(tokenDecimals);
-      const maxAdd = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.maxCanAdd(tokenAddress).call()
-      ).div(coeff);
 
-      if (amount > maxAdd.toNumber()) {
-        setAmount(maxAdd);
+      const allowance = BigNumber.from(
+        await tokenContract.methods.allowance(account, RANGEPOOL_ADDRESS).call()
+      )
+        .div(coeff)
+        .toNumber();
+
+      if (allowance < Number(amount)) {
+        setNeedsApproval(true);
+      } else {
+        setNeedsApproval(false);
       }
-    } else if (selectedMode === "Withdraw") {
-      const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
-      const coeff = BigNumber.from(10).pow(poolDecimals);
-      const balance = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-      ).div(coeff);
-
-      if (amount > balance.toNumber()) {
-        setAmount(balance);
-      }
-    }
-  }, [amount, tokenAddress, selectedMode]);
-
-  useEffect(async () => {
-    if (!tokenContract || !account) return;
-
-    const allowance = await tokenContract.methods
-      .allowance(RANGEPOOL_ADDRESS, account)
-      .call();
-
-    if (allowance < amount) {
-      setNeedsApproval(true);
-    } else {
-      setNeedsApproval(false);
-    }
+    })();
   }, [account, tokenContract, amount]);
 
   async function handleApprove() {
     if (!tokenAddress || !account) return;
+    if (!needsApproval) return true;
     try {
-      const allowance = await tokenContract.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
-
       const coeff = BigNumber.from(10).pow(tokenDecimals);
       const infinite = BigNumber.from(999999999999).mul(coeff);
       const needed = BigNumber.from(amount).mul(coeff);
 
-      if (allowance < amount) {
-        const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+      const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
 
-        await tokenContract.methods
-          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .send({ from: account });
-      }
+      const gasLimit = await tokenContract.methods
+        .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+        .estimateGas({ from: account });
+
+      await tokenContract.methods
+        .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+        .send({ from: account, gasLimit });
+
       return true;
     } catch (e) {
-      console.error("error approving");
+      console.error(e);
       return false;
     }
   }
@@ -149,14 +188,19 @@ export const LP = () => {
     const success = await handleApprove();
     if (!success) return;
 
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
-    const needed = BigNumber.from(amount).mul(coeff);
-
     try {
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const needed = BigNumber.from(amount).mul(coeff);
+
+      const gasLimit = await RANGEPOOL_CONTRACT.methods
+        .add(tokenAddress, needed)
+        .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, needed)
-        .send({ from: account });
-    } catch {}
+        .send({ from: account, gasLimit });
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function handleWithdraw() {
@@ -166,9 +210,12 @@ export const LP = () => {
     const needed = BigNumber.from(amount).mul(coeff);
 
     try {
+      const gasLimit = await RANGEPOOL_CONTRACT.methods
+        .remove(tokenAddress, needed)
+        .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, needed)
-        .send({ from: account });
+        .send({ from: account, gasLimit });
     } catch {}
   }
 
@@ -177,15 +224,65 @@ export const LP = () => {
   }
 
   function handleAddTabClick() {
-    setSelectedMode("Add");
+    setAmount(0);
+    setSelectedMode(MODES.ADD);
   }
 
   function handleWithdrawTabClick() {
-    setSelectedMode("Withdraw");
+    setAmount(0);
+    setSelectedMode(MODES.WITHDRAW);
   }
 
   function handleCheckboxChange() {
     setEnableInfiniteAllowance(!enableInfiniteAllowance);
+  }
+
+  async function handleMaxWithdraw() {
+    const currentToken = tokens.find((item) => item.symbol === token);
+    const { address } = currentToken;
+
+    const coeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    const maxCanRemove = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    if (maxCanRemove > balance) {
+      setAmount(balance);
+    } else {
+      setAmount(maxCanRemove);
+    }
+  }
+
+  async function handleMaxAdd() {
+    const currentToken = tokens.find((item) => item.symbol === token);
+    const { address } = currentToken;
+
+    const coeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    const maxCanAdd = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    if (maxCanAdd > balance) {
+      setAmount(balance);
+    } else {
+      setAmount(maxCanAdd);
+    }
   }
 
   return (
@@ -198,31 +295,22 @@ export const LP = () => {
     >
       <Grid item container spacing={1}>
         <Grid item xs>
-          <Button
-            sx={{
-              width: "100%",
-              height: "44px",
-              background: selectedMode === "Add" ? "#0A0717CC" : "#896BFE26",
-            }}
+          <TabButton
             variant="contained"
+            isSelected={selectedMode === MODES.ADD}
             onClick={handleAddTabClick}
           >
             Add
-          </Button>
+          </TabButton>
         </Grid>
         <Grid item xs>
-          <Button
-            sx={{
-              width: "100%",
-              height: "44px",
-              background:
-                selectedMode === "Withdraw" ? "#0A0717CC" : "#896BFE26",
-            }}
+          <TabButton
+            isSelected={selectedMode === MODES.WITHDRAW}
             variant="contained"
             onClick={handleWithdrawTabClick}
           >
             Withdraw
-          </Button>
+          </TabButton>
         </Grid>
       </Grid>
       <Grid item>
@@ -240,7 +328,22 @@ export const LP = () => {
               label="Amount"
               value={amount}
               onChange={handleAmountChange}
-              InputProps={{ inputProps: { min: 0 } }}
+              InputProps={{
+                inputProps: { min: 0 },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      onClick={
+                        selectedMode === "Withdraw"
+                          ? handleMaxWithdraw
+                          : handleMaxAdd
+                      }
+                    >
+                      Max
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
               type="number"
             />
           </Paper>

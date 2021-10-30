@@ -4,8 +4,9 @@ import { erc20_interface, RANGEPOOL_ADDRESS } from "./constants";
 const Contract = require("web3-eth-contract");
 
 export default class Token {
-  constructor(address, provider) {
+  constructor(address, provider, rangepoolContract) {
     this.address = address;
+    this.rangepoolContract = rangepoolContract;
 
     this.contract = new Contract(erc20_interface, address);
 
@@ -14,6 +15,12 @@ export default class Token {
 
   async getSymbol() {
     this.symbol = await this.contract.methods.symbol().call();
+  }
+
+  async getInfo() {
+    this.info = await this.rangepoolContract.methods
+      .tokenInfo(this.address)
+      .call();
   }
 
   async getDecimals() {

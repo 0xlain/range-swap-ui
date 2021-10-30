@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { Button } from "@mui/material";
-import { RANGEPOOL_CONTRACT } from "../utils/constants";
+import { useRangepool } from "../hooks/useRangepool";
 
 const injected = new InjectedConnector();
 
@@ -16,22 +16,28 @@ function shortenHex(hex, length = 4) {
 }
 
 export default function ConnectWalletButton() {
-  const { activate, account, library } = useWeb3React();
+  const { activate, account, library, chainId } = useWeb3React();
+  const { RANGEPOOL_CONTRACT } = useRangepool();
 
   const [buttonText, setButtonText] = useState(ONBOARD_TEXT);
   const [isDisabled, setDisabled] = useState(false);
 
   useEffect(() => {
-    if (account) {
+    if (account && chainId === 1) {
       RANGEPOOL_CONTRACT.setProvider(library.currentProvider);
       RANGEPOOL_CONTRACT.defaultAccount = account;
       setButtonText(shortenHex(account));
+      setDisabled(true);
+    } else if (account && chainId !== 1) {
+      RANGEPOOL_CONTRACT.setProvider(null);
+      RANGEPOOL_CONTRACT.defaultAccount = null;
+      setButtonText("Please Connect To Ethereum Mainnet");
       setDisabled(true);
     } else {
       setButtonText(CONNECT_TEXT);
       setDisabled(false);
     }
-  }, [account]);
+  }, [account, chainId, library]);
 
   const onClick = async () => {
     if (window.ethereum) {
@@ -53,7 +59,6 @@ export default function ConnectWalletButton() {
 
   return (
     <Button
-      variant="text"
       disabled={isDisabled}
       onClick={onClick}
       variant="contained"
