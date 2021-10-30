@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 
 import { useTokens } from "../hooks/useTokens";
 
-const TableHeader = styled.td`
+const TableHeader = styled.div`
   font-family: DM Mono;
   font-style: normal;
   font-weight: 500;
