@@ -241,16 +241,18 @@ export const LP = () => {
     const currentToken = tokens.find((item) => item.symbol === token);
     const { address } = currentToken;
 
-    const balance = Number(
+    const coeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
       await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    );
-    if (!balance) {
-      return;
-    }
+    )
+      .div(coeff)
+      .toNumber();
 
-    const maxCanRemove = await RANGEPOOL_CONTRACT.methods
-      .maxCanRemove(address)
-      .call();
+    const maxCanRemove = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
+    )
+      .div(coeff)
+      .toNumber();
 
     if (maxCanRemove > balance) {
       setAmount(balance);
