@@ -197,14 +197,18 @@ export const Trade = () => {
   }
 
   async function handleMaxFrom() {
-    const coeff = BigNumber.from(10).pow(decimalsFrom);
-    const balance = BigNumber.from(
-      await contractFrom.methods.balanceOf(account).call()
-    )
-      .div(coeff)
-      .toNumber();
+    try {
+      const coeff = BigNumber.from(10).pow(decimalsFrom);
+      const balance = BigNumber.from(
+        await contractFrom.methods.balanceOf(account).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    setFromAmount(balance);
+      setFromAmount(balance);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (

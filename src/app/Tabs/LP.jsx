@@ -238,50 +238,58 @@ export const LP = () => {
   }
 
   async function handleMaxWithdraw() {
-    const currentToken = tokens.find((item) => item.symbol === token);
-    const { address } = currentToken;
+    try {
+      const currentToken = tokens.find((item) => item.symbol === token);
+      const { address } = currentToken;
 
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
-    const balance = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    )
-      .div(coeff)
-      .toNumber();
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const balance = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    const maxCanRemove = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
-    )
-      .div(coeff)
-      .toNumber();
+      const maxCanRemove = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    if (maxCanRemove > balance) {
-      setAmount(balance);
-    } else {
-      setAmount(maxCanRemove);
+      if (maxCanRemove > balance) {
+        setAmount(balance);
+      } else {
+        setAmount(maxCanRemove);
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
   async function handleMaxAdd() {
-    const currentToken = tokens.find((item) => item.symbol === token);
-    const { address } = currentToken;
+    try {
+      const currentToken = tokens.find((item) => item.symbol === token);
+      const { address } = currentToken;
 
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
-    const balance = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    )
-      .div(coeff)
-      .toNumber();
+      const coeff = BigNumber.from(10).pow(tokenDecimals);
+      const balance = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    const maxCanAdd = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()
-    )
-      .div(coeff)
-      .toNumber();
+      const maxCanAdd = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    if (maxCanAdd > balance) {
-      setAmount(balance);
-    } else {
-      setAmount(maxCanAdd);
+      if (maxCanAdd > balance) {
+        setAmount(balance);
+      } else {
+        setAmount(maxCanAdd);
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
