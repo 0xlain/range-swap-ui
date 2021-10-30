@@ -8,6 +8,7 @@ import {
   FormGroup,
   Grid,
   IconButton,
+  InputAdornment,
   Paper,
   TextField,
 } from "@mui/material";
@@ -195,6 +196,17 @@ export const Trade = () => {
     setToToken(prevState.fromToken);
   }
 
+  async function handleMaxFrom() {
+    const coeff = BigNumber.from(10).pow(decimalsFrom);
+    const balance = BigNumber.from(
+      await contractFrom.methods.balanceOf(account).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    setFromAmount(balance);
+  }
+
   return (
     <Grid
       container
@@ -220,7 +232,14 @@ export const Trade = () => {
               label="Amount"
               value={fromAmount}
               onChange={handleFromAmountChange}
-              InputProps={{ inputProps: { min: 0 } }}
+              InputProps={{
+                inputProps: { min: 0 },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button onClick={handleMaxFrom}>Max</Button>
+                  </InputAdornment>
+                ),
+              }}
               type="number"
             />
           </Paper>
