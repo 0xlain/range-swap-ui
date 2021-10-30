@@ -11,6 +11,7 @@ import {
   Paper,
   TextField,
   Typography,
+  InputAdornment,
 } from "@mui/material";
 
 import TokenSelect from "../components/TokenSelect";
@@ -223,15 +224,65 @@ export const LP = () => {
   }
 
   function handleAddTabClick() {
+    setAmount(0);
     setSelectedMode(MODES.ADD);
   }
 
   function handleWithdrawTabClick() {
+    setAmount(0);
     setSelectedMode(MODES.WITHDRAW);
   }
 
   function handleCheckboxChange() {
     setEnableInfiniteAllowance(!enableInfiniteAllowance);
+  }
+
+  async function handleMaxWithdraw() {
+    const currentToken = tokens.find((item) => item.symbol === token);
+    const { address } = currentToken;
+
+    const coeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    const maxCanRemove = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    if (maxCanRemove > balance) {
+      setAmount(balance);
+    } else {
+      setAmount(maxCanRemove);
+    }
+  }
+
+  async function handleMaxAdd() {
+    const currentToken = tokens.find((item) => item.symbol === token);
+    const { address } = currentToken;
+
+    const coeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    const maxCanAdd = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()
+    )
+      .div(coeff)
+      .toNumber();
+
+    if (maxCanAdd > balance) {
+      setAmount(balance);
+    } else {
+      setAmount(maxCanAdd);
+    }
   }
 
   return (
@@ -277,7 +328,22 @@ export const LP = () => {
               label="Amount"
               value={amount}
               onChange={handleAmountChange}
-              InputProps={{ inputProps: { min: 0 } }}
+              InputProps={{
+                inputProps: { min: 0 },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      onClick={
+                        selectedMode === "Withdraw"
+                          ? handleMaxWithdraw
+                          : handleMaxAdd
+                      }
+                    >
+                      Max
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
               type="number"
             />
           </Paper>
