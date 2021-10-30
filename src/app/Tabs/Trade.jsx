@@ -13,14 +13,13 @@ import {
 } from "@mui/material";
 import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 
-import { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } from "../utils/constants";
 import { useTokens } from "../hooks/useTokens";
-
+import { useRangepool } from "../hooks/useRangepool";
 import TokenSelect from "../components/TokenSelect";
 
 export const Trade = () => {
   const { account } = useWeb3React();
-
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
   const tokens = useTokens();
 
   const [fromToken, setFromToken] = useState("");
@@ -88,42 +87,48 @@ export const Trade = () => {
     setAddressTo(token.address);
   }, [toToken, tokens]);
 
-  useEffect(async () => {
-    if (!addressFrom || !addressTo || !account) return;
+  useEffect(() => {
+    (async () => {
+      if (!addressFrom || !addressTo || !account) return;
 
-    const coeff = BigNumber.from(10).pow(decimalsFrom);
+      const coeff = BigNumber.from(10).pow(decimalsFrom);
 
-    const maxTo = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressFrom, addressTo).call()
-    ).div(coeff);
+      const maxTo = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods
+          .maxCanSwap(addressFrom, addressTo)
+          .call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    const maxFrom = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanSwap(addressTo, addressFrom).call()
-    ).div(coeff);
+      const amountOut = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods
+          .amountOut(addressFrom, fromAmount, addressTo)
+          .call()
+      ).toNumber();
 
-    const amountOut = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods
-        .amountOut(addressFrom, fromAmount, addressTo)
-        .call()
-    );
+      if (amountOut < maxTo) {
+        setToAmount(amountOut);
+      } else {
+        setToAmount(maxTo);
+        //idk if this is the correct way to set the from amount,
+        //we want to cap it once the maxTo amount is reached
+        setFromAmount(maxTo);
+      }
 
-    if (amountOut.lte(maxTo)) {
-      setToAmount(amountOut);
-    } else {
-      setToAmount(maxTo.toNumber());
-      setFromAmount(maxFrom.toNumber());
-    }
+      const allowance = BigNumber.from(
+        await contractFrom.methods.allowance(account, RANGEPOOL_ADDRESS).call()
+      )
+        .div(coeff)
+        .toNumber();
 
-    const allowance = await contractFrom.methods
-      .allowance(RANGEPOOL_ADDRESS, account)
-      .call();
-
-    if (allowance < fromAmount) {
-      setNeedsApproval(true);
-    } else {
-      setNeedsApproval(false);
-    }
-  }, [addressFrom, addressTo, fromAmount, account]);
+      if (allowance < Number(fromAmount)) {
+        setNeedsApproval(true);
+      } else {
+        setNeedsApproval(false);
+      }
+    })();
+  }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
 
   function handleFromAmountChange(e) {
     setFromAmount(e.target.value);
@@ -132,24 +137,24 @@ export const Trade = () => {
   async function handleApprove() {
     if (!addressFrom || !addressTo || !account) return;
     try {
-      const allowance = await contractFrom.methods
-        .allowance(RANGEPOOL_ADDRESS, account)
-        .call();
-
       const coeff = BigNumber.from(10).pow(decimalsFrom);
       const infinite = BigNumber.from(999999999999).mul(coeff);
       const needed = BigNumber.from(fromAmount).mul(coeff);
 
-      if (allowance < fromAmount) {
+      if (needsApproval) {
         const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+
+        const gasLimit = await contractFrom.methods
+          .approve(RANGEPOOL_ADDRESS, allowanceAmount)
+          .estimateGas({ from: account });
 
         await contractFrom.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
-          .send({ from: account });
+          .send({ from: account, gasLimit });
       }
       return true;
     } catch (e) {
-      console.error("error approving");
+      console.error(e);
       return false;
     }
   }
@@ -164,10 +169,16 @@ export const Trade = () => {
     const needed = BigNumber.from(fromAmount).mul(coeff);
 
     try {
+      const gasLimit = await RANGEPOOL_CONTRACT.methods
+        .swap(addressFrom, needed, addressTo)
+        .estimateGas({ from: account });
+
       RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, needed, addressTo)
-        .send({ from: account });
-    } catch {}
+        .send({ from: account, gasLimit });
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function handleCheckboxChange() {
