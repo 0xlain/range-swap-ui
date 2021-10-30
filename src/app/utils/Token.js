@@ -27,6 +27,7 @@ export default class Token {
     this.decimals = await this.contract.methods.decimals().call();
   }
 
+
   async getMaxAdd() {
     try {
       const max = BigNumber.from(
@@ -69,5 +70,16 @@ export default class Token {
       console.error(e);
       return BigNumber.from(0);
     }
+
+  async getLiquidity() {
+    const coeff = BigNumber.from(10).pow(this.decimals);
+    const balance = BigNumber.from(
+      await this.contract.methods
+        .balanceOf(this.rangepoolContract._address)
+        .call()
+    ).div(coeff);
+
+    this.liquidity = balance.toNumber();
+
   }
 }
