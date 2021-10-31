@@ -113,9 +113,7 @@ export const Trade = () => {
 
       if (
         amountOut.gt(maxTo) ||
-        (amountOut.eq(BigNumber.from(0)) &&
-          !fromAmount.eq(BigNumber.from(0)) &&
-          !fromFieldAmount == 0)
+        (amountOut.eq(BigNumber.from(0)) && !fromAmount.eq(BigNumber.from(0)))
       ) {
         setToAmount(maxTo);
         //idk if this is the correct way to set the from amount,
@@ -162,8 +160,6 @@ export const Trade = () => {
     ).mul(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS));
 
     const simulated = int.add(decimals);
-
-    console.log("🤒", fromAmount);
 
     if (!fromAmount.eq(simulated)) {
       const newFieldAmount =
