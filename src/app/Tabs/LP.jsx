@@ -97,7 +97,6 @@ export const LP = () => {
       await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
     );
 
-    console.log("balance :>> ", balance.toString());
     const balanceDecimals = balance
       .mod(poolCoeff)
       .div(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS))
@@ -105,7 +104,7 @@ export const LP = () => {
     const balanceInteger = balance.div(poolCoeff).toNumber();
 
     const userBalance = Number(`${balanceInteger}.${balanceDecimals}`);
-    console.log("userBalance :>> ", userBalance);
+
     setCurrentPosition(userBalance);
   };
 
