@@ -156,7 +156,7 @@ export const LP = () => {
         await tokenContract.methods.allowance(account, RANGEPOOL_ADDRESS).call()
       );
 
-      if (allowance.gt(amount)) {
+      if (allowance.lt(amount)) {
         setNeedsApproval(true);
       } else {
         setNeedsApproval(false);
