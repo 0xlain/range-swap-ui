@@ -231,6 +231,8 @@ export const LP = () => {
         .approve(RANGEPOOL_ADDRESS, allowanceAmount)
         .send({ from: account, gasLimit });
 
+      setNeedsApproval(false);
+
       return true;
     } catch (e) {
       console.error(e);

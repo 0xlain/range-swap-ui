@@ -211,6 +211,8 @@ export const Trade = () => {
         await contractFrom.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
           .send({ from: account, gasLimit });
+
+        setNeedsApproval(false);
       }
       return true;
     } catch (e) {
