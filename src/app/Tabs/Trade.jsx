@@ -163,6 +163,8 @@ export const Trade = () => {
 
     const simulated = int.add(decimals);
 
+    console.log("🤒", fromAmount);
+
     if (!fromAmount.eq(simulated)) {
       const newFieldAmount =
         fromAmount
@@ -256,12 +258,9 @@ export const Trade = () => {
 
   async function handleMaxFrom() {
     try {
-      const coeff = BigNumber.from(10).pow(decimalsFrom);
       const balance = BigNumber.from(
         await contractFrom.methods.balanceOf(account).call()
-      )
-        .div(coeff)
-        .toNumber();
+      );
 
       setFromAmount(balance);
     } catch (e) {
