@@ -91,24 +91,25 @@ export const LP = () => {
   const [tokenMaxAdd, setTokenMaxAdd] = useState(BigNumber.from(0));
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
+  const getUserBalance = async () => {
+    const poolCoeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    );
+
+    console.log("balance :>> ", balance.toString());
+    const balanceDecimals = balance
+      .mod(poolCoeff)
+      .div(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS))
+      .toNumber();
+    const balanceInteger = balance.div(poolCoeff).toNumber();
+
+    const userBalance = Number(`${balanceInteger}.${balanceDecimals}`);
+    console.log("userBalance :>> ", userBalance);
+    setCurrentPosition(userBalance);
+  };
+
   useEffect(() => {
-    const getUserBalance = async () => {
-      const poolCoeff = BigNumber.from(10).pow(tokenDecimals);
-      const balance = BigNumber.from(
-        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-      );
-
-      console.log("balance :>> ", balance.toString());
-      const balanceDecimals = balance
-        .mod(poolCoeff)
-        .div(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS))
-        .toNumber();
-      const balanceInteger = balance.div(poolCoeff).toNumber();
-
-      const userBalance = Number(`${balanceInteger}.${balanceDecimals}`);
-      console.log("userBalance :>> ", userBalance);
-      setCurrentPosition(userBalance);
-    };
     if (account) {
       getUserBalance();
     }
@@ -248,9 +249,10 @@ export const LP = () => {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, amount)
         .estimateGas({ from: account });
-      RANGEPOOL_CONTRACT.methods
+      await RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, amount)
         .send({ from: account, gasLimit });
+      getUserBalance();
     } catch (e) {
       console.error(e);
     }
@@ -262,9 +264,10 @@ export const LP = () => {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, amount)
         .estimateGas({ from: account });
-      RANGEPOOL_CONTRACT.methods
+      await RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, amount)
         .send({ from: account, gasLimit });
+      getUserBalance();
     } catch {}
   }
 
