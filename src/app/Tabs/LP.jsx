@@ -299,21 +299,25 @@ export const LP = () => {
   }
 
   async function handleMaxWithdraw() {
-    const currentToken = tokens.find((item) => item.symbol === token);
-    const { address } = currentToken;
+    try {
+      const currentToken = tokens.find((item) => item.symbol === token);
+      const { address } = currentToken;
 
-    const balance = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    );
+      const balance = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+      );
 
-    const maxCanRemove = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
-    );
+      const maxCanRemove = BigNumber.from(
+        await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
+      );
 
-    if (maxCanRemove.gt(balance)) {
-      setAmount(balance);
-    } else {
-      setAmount(maxCanRemove);
+      if (maxCanRemove.gt(balance)) {
+        setAmount(balance);
+      } else {
+        setAmount(maxCanRemove);
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
