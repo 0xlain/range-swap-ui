@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { BigNumber } from "@ethersproject/bignumber";
 import styled from "@emotion/styled";
@@ -17,6 +17,7 @@ import {
 import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
+import { ROUNDING_DECIMALS } from "../utils/constants";
 
 const TabButton = styled(Button)`
   width: 100%;
@@ -48,7 +49,8 @@ export const LP = () => {
 
   const [selectedMode, setSelectedMode] = useState(MODES.ADD);
   const [token, setToken] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(BigNumber.from(0));
+  const [fieldAmount, setFieldAmount] = useState(BigNumber.from(0));
   const [needsApproval, setNeedsApproval] = useState(false);
   const [disableApproveButton, setDisableApproveButton] = useState(true);
   const [disableSwapButton, setDisableSwapButton] = useState(true);
@@ -57,12 +59,19 @@ export const LP = () => {
   const [swapBackground, setSwapBackground] = useState();
   const [withdrawBackground, setWithdrawBackground] = useState();
   const [tokenContract, setTokenContract] = useState();
-  const [tokenDecimals, setTokenDecimals] = useState();
+  const [tokenDecimals, setTokenDecimals] = useState(18);
   const [tokenAddress, setTokenAddress] = useState();
+  const [tokenMaxAdd, setTokenMaxAdd] = useState(BigNumber.from(0));
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
   useEffect(() => {
-    if (account && needsApproval && Number(amount) !== 0 && token) {
+    if (
+      account &&
+      needsApproval &&
+      !amount.eq(BigNumber.from(0)) &&
+      fieldAmount !== 0 &&
+      token
+    ) {
       setDisableApproveButton(false);
       setApproveBackground(
         "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
@@ -71,10 +80,16 @@ export const LP = () => {
       setDisableApproveButton(true);
       setApproveBackground("#59318C59");
     }
-  }, [account, needsApproval, amount, token]);
+  }, [account, needsApproval, amount, fieldAmount, token]);
 
   useEffect(() => {
-    if (account && !needsApproval && Number(amount) !== 0 && token) {
+    if (
+      account &&
+      !needsApproval &&
+      !amount.eq(BigNumber.from(0)) !== 0 &&
+      fieldAmount !== 0 &&
+      token
+    ) {
       setDisableSwapButton(false);
       setSwapBackground(
         "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
@@ -83,7 +98,7 @@ export const LP = () => {
       setDisableSwapButton(true);
       setSwapBackground("#59318C59");
     }
-  }, [account, needsApproval, amount, token]);
+  }, [account, needsApproval, amount, fieldAmount, token]);
 
   useEffect(() => {
     if (account && Number(amount) !== 0 && token) {
@@ -104,6 +119,7 @@ export const LP = () => {
     setTokenContract(newToken.contract);
     setTokenDecimals(newToken.decimals);
     setTokenAddress(newToken.address);
+    setTokenMaxAdd(newToken.maxAdd);
   }, [token, tokens]);
 
   useEffect(() => {
@@ -111,27 +127,21 @@ export const LP = () => {
       if (!tokenAddress) return;
 
       if (selectedMode === "Add") {
+        if (amount.gt(tokenMaxAdd)) {
+          setAmount(tokenMaxAdd);
+        }
       } else if (selectedMode === "Withdraw") {
-        const poolDecimals = await RANGEPOOL_CONTRACT.methods.decimals().call();
-        const poolCoeff = BigNumber.from(10).pow(poolDecimals);
         const balance = BigNumber.from(
           await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-        )
-          .div(poolCoeff)
-          .toNumber();
-
-        if (Number(amount) > balance) {
+        );
+        if (amount.gt(balance)) {
           setAmount(balance);
         }
 
-        const tokenCoeff = BigNumber.from(10).pow(tokenDecimals);
         const maxRemove = BigNumber.from(
           await RANGEPOOL_CONTRACT.methods.maxCanRemove(tokenAddress).call()
-        )
-          .div(tokenCoeff)
-          .toNumber();
-
-        if (Number(amount) > maxRemove) {
+        );
+        if (amount.gt(maxRemove)) {
           setAmount(maxRemove);
         }
       }
@@ -141,15 +151,12 @@ export const LP = () => {
   useEffect(() => {
     (async () => {
       if (!tokenContract || !account) return;
-      const coeff = BigNumber.from(10).pow(tokenDecimals);
 
       const allowance = BigNumber.from(
         await tokenContract.methods.allowance(account, RANGEPOOL_ADDRESS).call()
-      )
-        .div(coeff)
-        .toNumber();
+      );
 
-      if (allowance < Number(amount)) {
+      if (allowance.lt(amount)) {
         setNeedsApproval(true);
       } else {
         setNeedsApproval(false);
@@ -163,9 +170,8 @@ export const LP = () => {
     try {
       const coeff = BigNumber.from(10).pow(tokenDecimals);
       const infinite = BigNumber.from(999999999999).mul(coeff);
-      const needed = BigNumber.from(amount).mul(coeff);
 
-      const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+      const allowanceAmount = enableInfiniteAllowance ? infinite : amount;
 
       const gasLimit = await tokenContract.methods
         .approve(RANGEPOOL_ADDRESS, allowanceAmount)
@@ -189,14 +195,11 @@ export const LP = () => {
     if (!success) return;
 
     try {
-      const coeff = BigNumber.from(10).pow(tokenDecimals);
-      const needed = BigNumber.from(amount).mul(coeff);
-
       const gasLimit = await RANGEPOOL_CONTRACT.methods
-        .add(tokenAddress, needed)
+        .add(tokenAddress, amount)
         .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
-        .add(tokenAddress, needed)
+        .add(tokenAddress, amount)
         .send({ from: account, gasLimit });
     } catch (e) {
       console.error(e);
@@ -205,31 +208,37 @@ export const LP = () => {
 
   async function handleWithdraw() {
     if (!tokenAddress || !amount || !account) return;
-
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
-    const needed = BigNumber.from(amount).mul(coeff);
-
     try {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
-        .remove(tokenAddress, needed)
+        .remove(tokenAddress, amount)
         .estimateGas({ from: account });
       RANGEPOOL_CONTRACT.methods
-        .remove(tokenAddress, needed)
+        .remove(tokenAddress, amount)
         .send({ from: account, gasLimit });
     } catch {}
   }
 
   function handleAmountChange(e) {
-    setAmount(e.target.value);
+    const int = BigNumber.from(Math.floor(e.target.value)).mul(
+      BigNumber.from(10).pow(tokenDecimals)
+    );
+
+    const decimals = BigNumber.from(
+      Math.floor((e.target.value % 1) * 10 ** ROUNDING_DECIMALS)
+    ).mul(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS));
+
+    const newAmount = int.add(decimals);
+    setAmount(newAmount);
+    setFieldAmount(e.target.value);
   }
 
   function handleAddTabClick() {
-    setAmount(0);
+    setAmount(BigNumber.from(0));
     setSelectedMode(MODES.ADD);
   }
 
   function handleWithdrawTabClick() {
-    setAmount(0);
+    setAmount(BigNumber.from(0));
     setSelectedMode(MODES.WITHDRAW);
   }
 
@@ -241,20 +250,15 @@ export const LP = () => {
     const currentToken = tokens.find((item) => item.symbol === token);
     const { address } = currentToken;
 
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
     const balance = BigNumber.from(
       await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    )
-      .div(coeff)
-      .toNumber();
+    );
 
     const maxCanRemove = BigNumber.from(
       await RANGEPOOL_CONTRACT.methods.maxCanRemove(address).call()
-    )
-      .div(coeff)
-      .toNumber();
+    );
 
-    if (maxCanRemove > balance) {
+    if (maxCanRemove.gt(balance)) {
       setAmount(balance);
     } else {
       setAmount(maxCanRemove);
@@ -262,28 +266,38 @@ export const LP = () => {
   }
 
   async function handleMaxAdd() {
-    const currentToken = tokens.find((item) => item.symbol === token);
-    const { address } = currentToken;
-
-    const coeff = BigNumber.from(10).pow(tokenDecimals);
     const balance = BigNumber.from(
       await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
-    )
-      .div(coeff)
-      .toNumber();
+    );
 
-    const maxCanAdd = BigNumber.from(
-      await RANGEPOOL_CONTRACT.methods.maxCanAdd(address).call()
-    )
-      .div(coeff)
-      .toNumber();
-
-    if (maxCanAdd > balance) {
+    if (tokenMaxAdd.gt(balance)) {
       setAmount(balance);
     } else {
-      setAmount(maxCanAdd);
+      setAmount(tokenMaxAdd);
     }
   }
+
+  useEffect(() => {
+    const int = BigNumber.from(Math.floor(fieldAmount)).mul(
+      BigNumber.from(10).pow(tokenDecimals)
+    );
+
+    const decimals = BigNumber.from(
+      Math.floor((fieldAmount % 1) * 10 ** ROUNDING_DECIMALS)
+    ).mul(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS));
+
+    const simulated = int.add(decimals);
+
+    if (!amount.eq(simulated)) {
+      const newFieldAmount =
+        amount
+          .div(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS))
+          .toNumber() /
+        10 ** ROUNDING_DECIMALS;
+
+      setFieldAmount(newFieldAmount);
+    }
+  }, [amount]);
 
   return (
     <Grid
@@ -326,7 +340,7 @@ export const LP = () => {
           <Paper sx={{ background: "#0A0717CC" }}>
             <TextField
               label="Amount"
-              value={amount}
+              value={fieldAmount}
               onChange={handleAmountChange}
               InputProps={{
                 inputProps: { min: 0 },

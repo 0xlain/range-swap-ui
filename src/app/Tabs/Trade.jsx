@@ -16,6 +16,7 @@ import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
 import TokenSelect from "../components/TokenSelect";
+import { ROUNDING_DECIMALS } from "../utils/constants";
 
 export const Trade = () => {
   const { account } = useWeb3React();
@@ -24,12 +25,15 @@ export const Trade = () => {
 
   const [fromToken, setFromToken] = useState("");
   const [toToken, setToToken] = useState("");
-  const [fromAmount, setFromAmount] = useState(0);
-  const [toAmount, setToAmount] = useState(0);
+  const [fromAmount, setFromAmount] = useState(BigNumber.from(0));
+  const [toAmount, setToAmount] = useState(BigNumber.from(0));
+  const [fromFieldAmount, setFromFieldAmount] = useState(0);
+  const [toFieldAmount, setToFieldAmount] = useState(0);
   const [addressFrom, setAddressFrom] = useState();
   const [addressTo, setAddressTo] = useState();
   const [contractFrom, setContractFrom] = useState();
-  const [decimalsFrom, setDecimalsFrom] = useState();
+  const [decimalsFrom, setDecimalsFrom] = useState(18);
+  const [decimalsTo, setDecimalsTo] = useState(18);
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
   const [needsApproval, setNeedsApproval] = useState(false);
   const [disableApproveButton, setDisableApproveButton] = useState(true);
@@ -42,6 +46,7 @@ export const Trade = () => {
       account &&
       needsApproval &&
       Number(fromAmount) !== 0 &&
+      fromFieldAmount !== 0 &&
       fromToken &&
       toToken
     ) {
@@ -53,13 +58,14 @@ export const Trade = () => {
       setDisableApproveButton(true);
       setApproveBackground("#59318C59");
     }
-  }, [account, needsApproval, fromAmount, fromToken, toToken]);
+  }, [account, needsApproval, fromAmount, fromFieldAmount, fromToken, toToken]);
 
   useEffect(() => {
     if (
       account &&
       !needsApproval &&
       Number(fromAmount) !== 0 &&
+      fromFieldAmount !== 0 &&
       fromToken &&
       toToken
     ) {
@@ -71,7 +77,7 @@ export const Trade = () => {
       setDisableSwapButton(true);
       setSwapBackground("#59318C59");
     }
-  }, [account, needsApproval, fromAmount, fromToken, toToken]);
+  }, [account, needsApproval, fromAmount, fromFieldAmount, fromToken, toToken]);
 
   useEffect(() => {
     if (!fromToken) return;
@@ -85,44 +91,44 @@ export const Trade = () => {
     if (!toToken) return;
     const token = tokens?.find((token) => token.symbol === toToken);
     setAddressTo(token.address);
+    setDecimalsTo(token.decimals);
   }, [toToken, tokens]);
 
   useEffect(() => {
     (async () => {
       if (!addressFrom || !addressTo || !account) return;
 
-      const coeff = BigNumber.from(10).pow(decimalsFrom);
-
       const maxTo = BigNumber.from(
         await RANGEPOOL_CONTRACT.methods
           .maxCanSwap(addressFrom, addressTo)
           .call()
-      )
-        .div(coeff)
-        .toNumber();
+      );
 
       const amountOut = BigNumber.from(
         await RANGEPOOL_CONTRACT.methods
           .amountOut(addressFrom, fromAmount, addressTo)
           .call()
-      ).toNumber();
+      );
 
-      if (amountOut < maxTo) {
-        setToAmount(amountOut);
-      } else {
+      if (
+        amountOut.gt(maxTo) ||
+        (amountOut.eq(BigNumber.from(0)) &&
+          !fromAmount.eq(BigNumber.from(0)) &&
+          !fromFieldAmount == 0)
+      ) {
         setToAmount(maxTo);
         //idk if this is the correct way to set the from amount,
         //we want to cap it once the maxTo amount is reached
         setFromAmount(maxTo);
+      } else {
+        setToAmount(amountOut);
       }
 
       const allowance = BigNumber.from(
         await contractFrom.methods.allowance(account, RANGEPOOL_ADDRESS).call()
-      )
-        .div(coeff)
-        .toNumber();
+      );
 
-      if (allowance < Number(fromAmount)) {
+      if (allowance.lt(fromAmount)) {
         setNeedsApproval(true);
       } else {
         setNeedsApproval(false);
@@ -131,18 +137,73 @@ export const Trade = () => {
   }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
 
   function handleFromAmountChange(e) {
-    setFromAmount(e.target.value);
+    const int = BigNumber.from(Math.floor(e.target.value)).mul(
+      BigNumber.from(10).pow(decimalsFrom)
+    );
+
+    const decimals = BigNumber.from(
+      Math.floor((e.target.value % 1) * 10 ** ROUNDING_DECIMALS)
+    ).mul(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS));
+
+    const newAmount = int.add(decimals);
+
+    setFromAmount(newAmount);
+    setFromFieldAmount(e.target.value);
   }
+
+  useEffect(() => {
+    const int = BigNumber.from(Math.floor(fromFieldAmount)).mul(
+      BigNumber.from(10).pow(decimalsFrom)
+    );
+
+    const decimals = BigNumber.from(
+      Math.floor((fromFieldAmount % 1) * 10 ** ROUNDING_DECIMALS)
+    ).mul(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS));
+
+    const simulated = int.add(decimals);
+
+    if (!fromAmount.eq(simulated)) {
+      const newFieldAmount =
+        fromAmount
+          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
+          .toNumber() /
+        10 ** ROUNDING_DECIMALS;
+
+      setFromFieldAmount(newFieldAmount);
+    }
+  }, [fromAmount]);
+
+  useEffect(() => {
+    const int = BigNumber.from(Math.floor(toFieldAmount)).mul(
+      BigNumber.from(10).pow(decimalsTo)
+    );
+
+    const decimals = BigNumber.from(
+      Math.floor((toFieldAmount % 1) * 10 ** ROUNDING_DECIMALS)
+    ).mul(BigNumber.from(10).pow(decimalsTo - ROUNDING_DECIMALS));
+
+    const simulated = int.add(decimals);
+
+    if (!toAmount.eq(simulated)) {
+      const newFieldAmount =
+        toAmount
+          .div(BigNumber.from(10).pow(decimalsTo - ROUNDING_DECIMALS))
+          .toNumber() /
+        10 ** ROUNDING_DECIMALS;
+
+      setToFieldAmount(newFieldAmount);
+    }
+  }, [toAmount]);
 
   async function handleApprove() {
     if (!addressFrom || !addressTo || !account) return;
     try {
-      const coeff = BigNumber.from(10).pow(decimalsFrom);
-      const infinite = BigNumber.from(999999999999).mul(coeff);
-      const needed = BigNumber.from(fromAmount).mul(coeff);
+      const infinite = BigNumber.from(999999999999).mul(
+        BigNumber.from(10).pow(decimalsFrom)
+      );
 
       if (needsApproval) {
-        const allowanceAmount = enableInfiniteAllowance ? infinite : needed;
+        const allowanceAmount = enableInfiniteAllowance ? infinite : fromAmount;
 
         const gasLimit = await contractFrom.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
@@ -165,16 +226,13 @@ export const Trade = () => {
     const success = await handleApprove();
     if (!success) return;
 
-    const coeff = BigNumber.from(10).pow(decimalsFrom);
-    const needed = BigNumber.from(fromAmount).mul(coeff);
-
     try {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
-        .swap(addressFrom, needed, addressTo)
+        .swap(addressFrom, fromAmount, addressTo)
         .estimateGas({ from: account });
 
       RANGEPOOL_CONTRACT.methods
-        .swap(addressFrom, needed, addressTo)
+        .swap(addressFrom, fromAmount, addressTo)
         .send({ from: account, gasLimit });
     } catch (e) {
       console.error(e);
@@ -218,7 +276,7 @@ export const Trade = () => {
           <Paper sx={{ background: "#0A0717CC" }}>
             <TextField
               label="Amount"
-              value={fromAmount}
+              value={fromFieldAmount}
               onChange={handleFromAmountChange}
               InputProps={{ inputProps: { min: 0 } }}
               type="number"
@@ -246,7 +304,7 @@ export const Trade = () => {
           <Paper sx={{ background: "#0A0717CC" }}>
             <TextField
               label=""
-              value={toAmount}
+              value={toFieldAmount}
               type="number"
               style={{ width: "100%" }}
             />
