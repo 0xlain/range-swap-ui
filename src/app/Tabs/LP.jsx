@@ -18,6 +18,7 @@ import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
 import { ROUNDING_DECIMALS } from "../utils/constants";
+import { formatNumber } from "../utils";
 
 const TabButton = styled(Button)`
   width: 100%;
@@ -37,6 +38,31 @@ const TabButton = styled(Button)`
       : "none"};
 `;
 
+const Text = styled.p`
+  font-family: DM Mono;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 150%;
+  margin: 0;
+  text-align: center;
+`;
+
+const UserLiquidityBalance = styled(Text)`
+  background: linear-gradient(180deg, #785fda 0%, #ff6d41 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 16px;
+`;
+
+const UserLiquidityHeader = styled(Text)`
+  color: rgba(250, 250, 250, 0.75);
+  text-transform: uppercase;
+  font-size: 10px;
+  margin-top: 8px;
+`;
+
 const MODES = {
   ADD: "Add",
   WITHDRAW: "Withdraw",
@@ -47,6 +73,7 @@ export const LP = () => {
   const tokens = useTokens();
   const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
 
+  const [currentPosition, setCurrentPosition] = useState(0);
   const [selectedMode, setSelectedMode] = useState(MODES.ADD);
   const [token, setToken] = useState("");
   const [amount, setAmount] = useState(BigNumber.from(0));
@@ -63,6 +90,29 @@ export const LP = () => {
   const [tokenAddress, setTokenAddress] = useState();
   const [tokenMaxAdd, setTokenMaxAdd] = useState(BigNumber.from(0));
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
+
+  const getUserBalance = async () => {
+    const poolCoeff = BigNumber.from(10).pow(tokenDecimals);
+    const balance = BigNumber.from(
+      await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
+    );
+
+    const balanceDecimals = balance
+      .mod(poolCoeff)
+      .div(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS))
+      .toNumber();
+    const balanceInteger = balance.div(poolCoeff).toNumber();
+
+    const userBalance = Number(`${balanceInteger}.${balanceDecimals}`);
+
+    setCurrentPosition(userBalance);
+  };
+
+  useEffect(() => {
+    if (account) {
+      getUserBalance();
+    }
+  }, [account, tokenDecimals]);
 
   useEffect(() => {
     if (
@@ -198,9 +248,10 @@ export const LP = () => {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, amount)
         .estimateGas({ from: account });
-      RANGEPOOL_CONTRACT.methods
+      await RANGEPOOL_CONTRACT.methods
         .add(tokenAddress, amount)
         .send({ from: account, gasLimit });
+      getUserBalance();
     } catch (e) {
       console.error(e);
     }
@@ -212,9 +263,10 @@ export const LP = () => {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, amount)
         .estimateGas({ from: account });
-      RANGEPOOL_CONTRACT.methods
+      await RANGEPOOL_CONTRACT.methods
         .remove(tokenAddress, amount)
         .send({ from: account, gasLimit });
+      getUserBalance();
     } catch {}
   }
 
@@ -325,6 +377,14 @@ export const LP = () => {
           >
             Withdraw
           </TabButton>
+        </Grid>
+      </Grid>
+      <Grid item container alignItems="center" justifyContent="center">
+        <Grid item>
+          <UserLiquidityHeader>Your position</UserLiquidityHeader>
+          <UserLiquidityBalance>
+            {formatNumber(currentPosition)}
+          </UserLiquidityBalance>
         </Grid>
       </Grid>
       <Grid item>
