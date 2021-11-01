@@ -10,6 +10,7 @@ import {
   IconButton,
   Paper,
   TextField,
+  Typography,
 } from "@mui/material";
 import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 
@@ -140,18 +141,21 @@ export const Trade = () => {
 
   useEffect(() => {
     if (fromAmount && CONTRACT_FEE) {
-      const feeToTake =
-        BigNumber.from(fromAmount)
-          .mul(BigNumber.from(CONTRACT_FEE))
-          .div(BigNumber.from(10).pow(9))
+      const poolCoeff = BigNumber.from(10).pow(decimalsFrom);
+      const feeToTake = BigNumber.from(fromAmount)
+        .mul(BigNumber.from(CONTRACT_FEE))
+        .div(BigNumber.from(10).pow(9));
+      const feeDecimals =
+        feeToTake
+          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
           .toNumber() /
-        10 ** decimalsFrom;
-
-      if (feeToTake !== fee) {
-        setFee(feeToTake);
-      }
+        10 ** ROUNDING_DECIMALS;
+      const feeInteger = feeToTake.div(poolCoeff).toNumber();
+      const result = feeInteger + feeDecimals;
+      
+      setFee(result);
     }
-  }, [fromAmount, CONTRACT_FEE]);
+  }, [fromAmount, CONTRACT_FEE, decimalsFrom]);
 
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
@@ -248,9 +252,11 @@ export const Trade = () => {
         .swap(addressFrom, fromAmount, addressTo)
         .estimateGas({ from: account });
 
-      RANGEPOOL_CONTRACT.methods
+      await RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, fromAmount, addressTo)
         .send({ from: account, gasLimit });
+
+      setFee(0);
     } catch (e) {
       console.error(e);
     }
@@ -328,6 +334,17 @@ export const Trade = () => {
           </Paper>
         </Grid>
       </Grid>
+      {Boolean(fee) && (
+        <Grid container item justifyContent="space-between">
+          <Grid item>
+            <Typography>Fee:</Typography>
+          </Grid>
+          <Grid item>
+            <Typography>{fee}</Typography>
+          </Grid>
+        </Grid>
+      )}
+
       <Grid item container spacing={1}>
         <Grid item xs>
           <Button
