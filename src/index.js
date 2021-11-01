@@ -3,10 +3,9 @@ import ReactDOM from "react-dom";
 import { Web3ReactProvider } from "@web3-react/core";
 
 import { CssBaseline, createTheme, ThemeProvider } from "@mui/material";
-import { blue, pink } from "@mui/material/colors";
 
 import "./index.css";
-import App from "./App";
+import { App } from "./app/App";
 
 const Web3 = require("web3");
 
@@ -14,16 +13,14 @@ function getLibrary(provider, connector) {
   return new Web3(provider);
 }
 
-window.ethereum.enable();
-
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
-      main: blue[500],
+      main: "#8d7dc7",
     },
     secondary: {
-      main: pink[300],
+      main: "#59318C59",
     },
   },
 });
