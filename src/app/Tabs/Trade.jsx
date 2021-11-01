@@ -20,12 +20,14 @@ import { ROUNDING_DECIMALS } from "../utils/constants";
 
 export const Trade = () => {
   const { account } = useWeb3React();
-  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT, CONTRACT_FEE } = useRangepool();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT, CONTRACT_FEE } =
+    useRangepool();
   const tokens = useTokens();
 
   const [fromToken, setFromToken] = useState("");
   const [toToken, setToToken] = useState("");
   const [fromAmount, setFromAmount] = useState(BigNumber.from(0));
+  const [fee, setFee] = useState(0);
   const [toAmount, setToAmount] = useState(BigNumber.from(0));
   const [fromFieldAmount, setFromFieldAmount] = useState(0);
   const [toFieldAmount, setToFieldAmount] = useState(0);
@@ -135,6 +137,21 @@ export const Trade = () => {
       }
     })();
   }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
+
+  useEffect(() => {
+    if (fromAmount && CONTRACT_FEE) {
+      const feeToTake =
+        BigNumber.from(fromAmount)
+          .mul(BigNumber.from(CONTRACT_FEE))
+          .div(BigNumber.from(10).pow(9))
+          .toNumber() /
+        10 ** decimalsFrom;
+
+      if (feeToTake !== fee) {
+        setFee(feeToTake);
+      }
+    }
+  }, [fromAmount, CONTRACT_FEE]);
 
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
