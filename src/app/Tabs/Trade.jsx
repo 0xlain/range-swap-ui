@@ -20,7 +20,7 @@ import { ROUNDING_DECIMALS } from "../utils/constants";
 
 export const Trade = () => {
   const { account } = useWeb3React();
-  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT, CONTRACT_FEE } = useRangepool();
   const tokens = useTokens();
 
   const [fromToken, setFromToken] = useState("");
