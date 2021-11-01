@@ -12,12 +12,31 @@ import {
   Paper,
   TextField,
 } from "@mui/material";
+import styled from "@emotion/styled";
 import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
 import TokenSelect from "../components/TokenSelect";
 import { ROUNDING_DECIMALS } from "../utils/constants";
+import { formatUserBalance } from "../utils";
+
+const BalanceText = styled.p`
+  margin: 0;
+  font-family: DM Mono;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 9px;
+  line-height: 100%;
+  color: rgba(137, 107, 254, 0.7);
+`;
+
+const MaxButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  align-items: center;
+`;
 
 export const Trade = () => {
   const { account } = useWeb3React();
@@ -41,6 +60,13 @@ export const Trade = () => {
   const [disableSwapButton, setDisableSwapButton] = useState(true);
   const [swapBackground, setSwapBackground] = useState("");
   const [approveBackground, setApproveBackground] = useState("");
+  const [balance, setBalance] = useState("");
+
+  useEffect(() => {
+    if (account && contractFrom) {
+      getUserBalance();
+    }
+  }, [account, contractFrom]);
 
   useEffect(() => {
     if (
@@ -194,6 +220,17 @@ export const Trade = () => {
     }
   }, [toAmount]);
 
+  async function getUserBalance() {
+    const userBalance = BigNumber.from(
+      await contractFrom.methods
+        .balanceOf(account)
+        .call()
+    );
+
+    const formattedBalance = formatUserBalance(userBalance);
+    setBalance(formattedBalance);
+  }
+
   async function handleApprove() {
     if (!addressFrom || !addressTo || !account) return;
     try {
@@ -256,10 +293,6 @@ export const Trade = () => {
 
   async function handleMaxFrom() {
     try {
-      const balance = BigNumber.from(
-        await contractFrom.methods.balanceOf(account).call()
-      );
-
       setFromAmount(balance);
     } catch (e) {
       console.error(e);
@@ -295,7 +328,10 @@ export const Trade = () => {
                 inputProps: { min: 0 },
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Button onClick={handleMaxFrom}>Max</Button>
+                    <MaxButtonWrapper>
+                      {Boolean(balance) && <BalanceText>{balance}</BalanceText>}
+                      <Button onClick={handleMaxFrom}>Max</Button>
+                    </MaxButtonWrapper>
                   </InputAdornment>
                 ),
               }}
