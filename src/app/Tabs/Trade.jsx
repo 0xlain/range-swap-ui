@@ -11,6 +11,7 @@ import {
   InputAdornment,
   Paper,
   TextField,
+  Typography,
 } from "@mui/material";
 import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 
@@ -21,12 +22,14 @@ import { ROUNDING_DECIMALS } from "../utils/constants";
 
 export const Trade = () => {
   const { account } = useWeb3React();
-  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT, CONTRACT_FEE } =
+    useRangepool();
   const tokens = useTokens();
 
   const [fromToken, setFromToken] = useState("");
   const [toToken, setToToken] = useState("");
   const [fromAmount, setFromAmount] = useState(BigNumber.from(0));
+  const [fee, setFee] = useState(0);
   const [toAmount, setToAmount] = useState(BigNumber.from(0));
   const [fromFieldAmount, setFromFieldAmount] = useState(0);
   const [toFieldAmount, setToFieldAmount] = useState(0);
@@ -135,6 +138,24 @@ export const Trade = () => {
     })();
   }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
 
+  useEffect(() => {
+    if (fromAmount && CONTRACT_FEE) {
+      const poolCoeff = BigNumber.from(10).pow(decimalsFrom);
+      const feeToTake = BigNumber.from(fromAmount)
+        .mul(BigNumber.from(CONTRACT_FEE))
+        .div(BigNumber.from(10).pow(9));
+      const feeDecimals =
+        feeToTake
+          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
+          .toNumber() /
+        10 ** ROUNDING_DECIMALS;
+      const feeInteger = feeToTake.div(poolCoeff).toNumber();
+      const result = feeInteger + feeDecimals;
+
+      setFee(result);
+    }
+  }, [fromAmount, CONTRACT_FEE, decimalsFrom]);
+
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
       BigNumber.from(10).pow(decimalsFrom)
@@ -232,9 +253,11 @@ export const Trade = () => {
         .swap(addressFrom, fromAmount, addressTo)
         .estimateGas({ from: account });
 
-      RANGEPOOL_CONTRACT.methods
+      await RANGEPOOL_CONTRACT.methods
         .swap(addressFrom, fromAmount, addressTo)
         .send({ from: account, gasLimit });
+
+      setFee(0);
     } catch (e) {
       console.error(e);
     }
@@ -331,6 +354,16 @@ export const Trade = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Grid container item justifyContent="space-between">
+        <Grid item>
+          <Typography>Fee:</Typography>
+        </Grid>
+        <Grid item>
+          <Typography>{fee}</Typography>
+        </Grid>
+      </Grid>
+
       <Grid item container spacing={1}>
         <Grid item xs>
           <Button
