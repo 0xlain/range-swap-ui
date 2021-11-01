@@ -1,24 +1,24 @@
 {
   "files": {
-    "main.css": "/range-swap-ui/static/css/main.2ae47eeb.chunk.css",
-    "main.js": "/range-swap-ui/static/js/main.ef04d10f.chunk.js",
-    "main.js.map": "/range-swap-ui/static/js/main.ef04d10f.chunk.js.map",
-    "runtime-main.js": "/range-swap-ui/static/js/runtime-main.29791b65.js",
-    "runtime-main.js.map": "/range-swap-ui/static/js/runtime-main.29791b65.js.map",
-    "static/js/2.68f2ee08.chunk.js": "/range-swap-ui/static/js/2.68f2ee08.chunk.js",
-    "static/js/2.68f2ee08.chunk.js.map": "/range-swap-ui/static/js/2.68f2ee08.chunk.js.map",
-    "index.html": "/range-swap-ui/index.html",
-    "static/css/main.2ae47eeb.chunk.css.map": "/range-swap-ui/static/css/main.2ae47eeb.chunk.css.map",
-    "static/js/2.68f2ee08.chunk.js.LICENSE.txt": "/range-swap-ui/static/js/2.68f2ee08.chunk.js.LICENSE.txt",
-    "static/media/CloseIcon.21ee27b1.svg": "/range-swap-ui/static/media/CloseIcon.21ee27b1.svg",
-    "static/media/RangeSwap.fbe50421.svg": "/range-swap-ui/static/media/RangeSwap.fbe50421.svg",
-    "static/media/SwapIcon.75667e99.svg": "/range-swap-ui/static/media/SwapIcon.75667e99.svg",
-    "static/media/WarningIcon.09540dfc.svg": "/range-swap-ui/static/media/WarningIcon.09540dfc.svg"
+    "main.css": "./static/css/main.2ae47eeb.chunk.css",
+    "main.js": "./static/js/main.a0cc64ff.chunk.js",
+    "main.js.map": "./static/js/main.a0cc64ff.chunk.js.map",
+    "runtime-main.js": "./static/js/runtime-main.2fa8ebc2.js",
+    "runtime-main.js.map": "./static/js/runtime-main.2fa8ebc2.js.map",
+    "static/js/2.5df842a9.chunk.js": "./static/js/2.5df842a9.chunk.js",
+    "static/js/2.5df842a9.chunk.js.map": "./static/js/2.5df842a9.chunk.js.map",
+    "index.html": "./index.html",
+    "static/css/main.2ae47eeb.chunk.css.map": "./static/css/main.2ae47eeb.chunk.css.map",
+    "static/js/2.5df842a9.chunk.js.LICENSE.txt": "./static/js/2.5df842a9.chunk.js.LICENSE.txt",
+    "static/media/CloseIcon.21ee27b1.svg": "./static/media/CloseIcon.21ee27b1.svg",
+    "static/media/RangeSwap.fbe50421.svg": "./static/media/RangeSwap.fbe50421.svg",
+    "static/media/SwapIcon.75667e99.svg": "./static/media/SwapIcon.75667e99.svg",
+    "static/media/WarningIcon.09540dfc.svg": "./static/media/WarningIcon.09540dfc.svg"
   },
   "entrypoints": [
-    "static/js/runtime-main.29791b65.js",
-    "static/js/2.68f2ee08.chunk.js",
+    "static/js/runtime-main.2fa8ebc2.js",
+    "static/js/2.5df842a9.chunk.js",
     "static/css/main.2ae47eeb.chunk.css",
-    "static/js/main.ef04d10f.chunk.js"
+    "static/js/main.a0cc64ff.chunk.js"
   ]
 }
