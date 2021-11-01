@@ -34,7 +34,7 @@ export function useTokens() {
             }
             await token.getDecimals();
 
-            await token.getMaxAdd();
+            token.getMaxAdd();
 
             await token.getLiquidity();
 
