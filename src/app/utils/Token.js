@@ -47,7 +47,7 @@ export default class Token {
       let lastMax = BigNumber.from(0);
       let currentMax = max;
 
-      while (!lastMax.eq(currentMax)) {
+      for (let i = 0; i < 20; i++) {
         lastMax = currentMax;
         currentMax = await this._maxCanAdd(lastMax);
       }
