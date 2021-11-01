@@ -45,18 +45,15 @@ export const Trade = () => {
     useRangepool();
   const tokens = useTokens();
 
-  const [fromToken, setFromToken] = useState("");
-  const [toToken, setToToken] = useState("");
+  const [fromTokenName, setFromTokenName] = useState("");
+  const [toTokenName, setToTokenName] = useState("");
+  const [tokenFrom, setTokenFrom] = useState();
+  const [tokenTo, setTokenTo] = useState();
   const [fromAmount, setFromAmount] = useState(BigNumber.from(0));
   const [fee, setFee] = useState(0);
   const [toAmount, setToAmount] = useState(BigNumber.from(0));
   const [fromFieldAmount, setFromFieldAmount] = useState(0);
   const [toFieldAmount, setToFieldAmount] = useState(0);
-  const [addressFrom, setAddressFrom] = useState();
-  const [addressTo, setAddressTo] = useState();
-  const [contractFrom, setContractFrom] = useState();
-  const [decimalsFrom, setDecimalsFrom] = useState(18);
-  const [decimalsTo, setDecimalsTo] = useState(18);
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
   const [needsApproval, setNeedsApproval] = useState(false);
   const [disableApproveButton, setDisableApproveButton] = useState(true);
@@ -66,10 +63,10 @@ export const Trade = () => {
   const [balance, setBalance] = useState("");
 
   useEffect(() => {
-    if (account && contractFrom) {
+    if (account && tokenFrom) {
       getUserBalance();
     }
-  }, [account, contractFrom]);
+  }, [account, tokenFrom]);
 
   useEffect(() => {
     if (
@@ -77,8 +74,8 @@ export const Trade = () => {
       needsApproval &&
       Number(fromAmount) !== 0 &&
       fromFieldAmount !== 0 &&
-      fromToken &&
-      toToken
+      fromTokenName &&
+      toTokenName
     ) {
       setDisableApproveButton(false);
       setApproveBackground(
@@ -88,7 +85,14 @@ export const Trade = () => {
       setDisableApproveButton(true);
       setApproveBackground("#59318C59");
     }
-  }, [account, needsApproval, fromAmount, fromFieldAmount, fromToken, toToken]);
+  }, [
+    account,
+    needsApproval,
+    fromAmount,
+    fromFieldAmount,
+    fromTokenName,
+    toTokenName,
+  ]);
 
   useEffect(() => {
     if (
@@ -96,8 +100,8 @@ export const Trade = () => {
       !needsApproval &&
       Number(fromAmount) !== 0 &&
       fromFieldAmount !== 0 &&
-      fromToken &&
-      toToken
+      fromTokenName &&
+      toTokenName
     ) {
       setDisableSwapButton(false);
       setSwapBackground(
@@ -107,36 +111,40 @@ export const Trade = () => {
       setDisableSwapButton(true);
       setSwapBackground("#59318C59");
     }
-  }, [account, needsApproval, fromAmount, fromFieldAmount, fromToken, toToken]);
+  }, [
+    account,
+    needsApproval,
+    fromAmount,
+    fromFieldAmount,
+    fromTokenName,
+    toTokenName,
+  ]);
 
   useEffect(() => {
-    if (!fromToken) return;
-    const token = tokens?.find((token) => token.symbol === fromToken);
-    setContractFrom(token.contract);
-    setDecimalsFrom(token.decimals);
-    setAddressFrom(token.address);
-  }, [fromToken, tokens]);
+    if (!fromTokenName) return;
+    const token = tokens?.find((token) => token.symbol === fromTokenName);
+    setTokenFrom(token);
+  }, [fromTokenName, tokens]);
 
   useEffect(() => {
-    if (!toToken) return;
-    const token = tokens?.find((token) => token.symbol === toToken);
-    setAddressTo(token.address);
-    setDecimalsTo(token.decimals);
-  }, [toToken, tokens]);
+    if (!toTokenName) return;
+    const token = tokens?.find((token) => token.symbol === toTokenName);
+    setTokenTo(token);
+  }, [toTokenName, tokens]);
 
   useEffect(() => {
     (async () => {
-      if (!addressFrom || !addressTo || !account) return;
+      if (!tokenFrom || !tokenTo || !account) return;
 
       const maxTo = BigNumber.from(
         await RANGEPOOL_CONTRACT.methods
-          .maxCanSwap(addressFrom, addressTo)
+          .maxCanSwap(tokenFrom.address, tokenTo.address)
           .call()
       );
 
       const amountOut = BigNumber.from(
         await RANGEPOOL_CONTRACT.methods
-          .amountOut(addressFrom, fromAmount, addressTo)
+          .amountOut(tokenFrom.address, fromAmount, tokenTo.address)
           .call()
       );
 
@@ -153,7 +161,9 @@ export const Trade = () => {
       }
 
       const allowance = BigNumber.from(
-        await contractFrom.methods.allowance(account, RANGEPOOL_ADDRESS).call()
+        await tokenFrom.contract.methods
+          .allowance(account, RANGEPOOL_ADDRESS)
+          .call()
       );
 
       if (allowance.lt(fromAmount)) {
@@ -162,17 +172,17 @@ export const Trade = () => {
         setNeedsApproval(false);
       }
     })();
-  }, [addressFrom, addressTo, fromAmount, account, contractFrom, decimalsFrom]);
+  }, [tokenFrom, tokenTo, fromAmount, account, tokenFrom, tokenFrom]);
 
   useEffect(() => {
-    if (fromAmount && CONTRACT_FEE) {
-      const poolCoeff = BigNumber.from(10).pow(decimalsFrom);
+    if (fromAmount && CONTRACT_FEE && tokenFrom) {
+      const poolCoeff = BigNumber.from(10).pow(tokenFrom.decimals);
       const feeToTake = BigNumber.from(fromAmount)
         .mul(BigNumber.from(CONTRACT_FEE))
         .div(BigNumber.from(10).pow(9));
       const feeDecimals =
         feeToTake
-          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
+          .div(BigNumber.from(10).pow(tokenFrom.decimals - ROUNDING_DECIMALS))
           .toNumber() /
         10 ** ROUNDING_DECIMALS;
       const feeInteger = feeToTake.div(poolCoeff).toNumber();
@@ -180,16 +190,16 @@ export const Trade = () => {
 
       setFee(result);
     }
-  }, [fromAmount, CONTRACT_FEE, decimalsFrom]);
+  }, [fromAmount, CONTRACT_FEE, tokenFrom]);
 
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
-      BigNumber.from(10).pow(decimalsFrom)
+      BigNumber.from(10).pow(tokenFrom.decimals)
     );
 
     const decimals = BigNumber.from(
       Math.floor((e.target.value % 1) * 10 ** ROUNDING_DECIMALS)
-    ).mul(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS));
+    ).mul(BigNumber.from(10).pow(tokenFrom.decimals - ROUNDING_DECIMALS));
 
     const newAmount = int.add(decimals);
 
@@ -198,54 +208,56 @@ export const Trade = () => {
   }
 
   useEffect(() => {
-    if (!fromAmount) return;
+    if (!tokenFrom) return;
 
     const int = BigNumber.from(Math.floor(fromFieldAmount)).mul(
-      BigNumber.from(10).pow(decimalsFrom)
+      BigNumber.from(10).pow(tokenFrom.decimals)
     );
 
     const decimals = BigNumber.from(
       Math.floor((fromFieldAmount % 1) * 10 ** ROUNDING_DECIMALS)
-    ).mul(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS));
+    ).mul(BigNumber.from(10).pow(tokenFrom.decimals - ROUNDING_DECIMALS));
 
     const simulated = int.add(decimals);
 
     if (!fromAmount.eq(simulated)) {
       const newFieldAmount =
         fromAmount
-          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
+          .div(BigNumber.from(10).pow(tokenFrom.decimals - ROUNDING_DECIMALS))
           .toNumber() /
         10 ** ROUNDING_DECIMALS;
 
       setFromFieldAmount(newFieldAmount);
     }
-  }, [fromAmount]);
+  }, [fromAmount, tokenFrom]);
 
   useEffect(() => {
+    if (!tokenTo) return;
+
     const int = BigNumber.from(Math.floor(toFieldAmount)).mul(
-      BigNumber.from(10).pow(decimalsTo)
+      BigNumber.from(10).pow(tokenTo.decimals)
     );
 
     const decimals = BigNumber.from(
       Math.floor((toFieldAmount % 1) * 10 ** ROUNDING_DECIMALS)
-    ).mul(BigNumber.from(10).pow(decimalsTo - ROUNDING_DECIMALS));
+    ).mul(BigNumber.from(10).pow(tokenTo.decimals - ROUNDING_DECIMALS));
 
     const simulated = int.add(decimals);
 
     if (!toAmount.eq(simulated)) {
       const newFieldAmount =
         toAmount
-          .div(BigNumber.from(10).pow(decimalsTo - ROUNDING_DECIMALS))
+          .div(BigNumber.from(10).pow(tokenTo.decimals - ROUNDING_DECIMALS))
           .toNumber() /
         10 ** ROUNDING_DECIMALS;
 
       setToFieldAmount(newFieldAmount);
     }
-  }, [toAmount]);
+  }, [toAmount, tokenTo]);
 
   async function getUserBalance() {
     const userBalance = BigNumber.from(
-      await contractFrom.methods.balanceOf(account).call()
+      await tokenFrom.contract.methods.balanceOf(account).call()
     );
 
     const formattedBalance = formatUserBalance(userBalance);
@@ -253,20 +265,20 @@ export const Trade = () => {
   }
 
   async function handleApprove() {
-    if (!addressFrom || !addressTo || !account) return;
+    if (!tokenFrom || !tokenTo || !account) return;
     try {
       const infinite = BigNumber.from(999999999999).mul(
-        BigNumber.from(10).pow(decimalsFrom)
+        BigNumber.from(10).pow(tokenFrom.decimals)
       );
 
       if (needsApproval) {
         const allowanceAmount = enableInfiniteAllowance ? infinite : fromAmount;
 
-        const gasLimit = await contractFrom.methods
+        const gasLimit = await tokenFrom.contract.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
           .estimateGas({ from: account });
 
-        await contractFrom.methods
+        await tokenFrom.contract.methods
           .approve(RANGEPOOL_ADDRESS, allowanceAmount)
           .send({ from: account, gasLimit });
 
@@ -280,21 +292,19 @@ export const Trade = () => {
   }
 
   async function handleSwap() {
-    if (!addressFrom || !addressTo || !account) return;
+    if (!tokenFrom || !tokenTo || !account) return;
 
     const success = await handleApprove();
     if (!success) return;
 
     try {
       const gasLimit = await RANGEPOOL_CONTRACT.methods
-        .swap(addressFrom, fromAmount, addressTo)
+        .swap(tokenFrom.address, fromAmount, tokenTo.address)
         .estimateGas({ from: account });
 
-      await RANGEPOOL_CONTRACT.methods
-        .swap(addressFrom, fromAmount, addressTo)
+      RANGEPOOL_CONTRACT.methods
+        .swap(tokenFrom.address, fromAmount, tokenTo.address)
         .send({ from: account, gasLimit });
-
-      setFee(0);
     } catch (e) {
       console.error(e);
     }
@@ -306,18 +316,18 @@ export const Trade = () => {
 
   function swapTokens() {
     const prevState = {
-      fromToken,
-      toToken,
+      fromToken: fromTokenName,
+      toToken: toTokenName,
     };
 
-    setFromToken(prevState.toToken);
-    setToToken(prevState.fromToken);
+    setFromTokenName(prevState.toToken);
+    setToTokenName(prevState.fromToken);
   }
 
   async function handleMaxFrom() {
     try {
       const bal = BigNumber.from(
-        await contractFrom.methods.balanceOf(account).call()
+        await tokenFrom.contract.methods.balanceOf(account).call()
       );
 
       setFromAmount(bal);
@@ -338,10 +348,10 @@ export const Trade = () => {
         <Grid item>
           <Paper sx={{ background: "#785FDA33" }}>
             <TokenSelect
-              value={fromToken}
+              value={fromTokenName}
               label="From"
               tokens={tokens}
-              onChange={setFromToken}
+              onChange={setFromTokenName}
             />
           </Paper>
         </Grid>
@@ -377,10 +387,10 @@ export const Trade = () => {
         <Grid item>
           <Paper sx={{ background: "#785FDA33" }}>
             <TokenSelect
-              value={toToken}
+              value={toTokenName}
               label="To"
               tokens={tokens}
-              onChange={setToToken}
+              onChange={setToTokenName}
             />
           </Paper>
         </Grid>

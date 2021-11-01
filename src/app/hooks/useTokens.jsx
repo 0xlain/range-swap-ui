@@ -26,17 +26,15 @@ export function useTokens() {
               library.currentProvider,
               RANGEPOOL_CONTRACT
             );
-            await token.getSymbol();
             await token.getInfo();
             if (token.info.accepting === false) {
               resolve();
               return;
             }
+            await token.getSymbol();
             await token.getDecimals();
-
-            await token.getMaxAdd();
-
             await token.getLiquidity();
+            token.getMaxAdd();
 
             resolve(token);
           } catch {
