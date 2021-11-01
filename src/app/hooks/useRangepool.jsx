@@ -8,31 +8,36 @@ import {
 } from "../utils/constants";
 
 export function useRangepool() {
-  const { chainId } = useWeb3React();
-  const [contract, setContract] = useState(null);
+  const { chainId, library } = useWeb3React();
+  const [contract, setContract] = useState({
+    RANGEPOOL_ADDRESS: MAINNET_ADDRESS,
+    RANGEPOOL_CONTRACT: MIANNET_CONTRACT,
+  });
 
   const getContractFee = async () => {
-    const fee = await contract.methods.fee().call();
+    const fee = await contract.RANGEPOOL_CONTRACT.methods.fee().call();
     setContract({ ...contract, CONTRACT_FEE: fee });
   };
 
   useEffect(() => {
     switch (chainId) {
       case 3:
-        return setContract({
+        setContract({
           RANGEPOOL_ADDRESS: ROPSTEN_ADDRESS,
           RANGEPOOL_CONTRACT: ROPSTEN_CONTRACT,
         });
+        return;
       default:
-        return {
+        setContract({
           RANGEPOOL_ADDRESS: MAINNET_ADDRESS,
           RANGEPOOL_CONTRACT: MIANNET_CONTRACT,
-        };
+        });
+        return;
     }
   }, [chainId]);
 
   useEffect(() => {
-    if (contract) {
+    if (library && !contract.CONTRACT_FEE) {
       getContractFee();
     }
   }, [contract]);
