@@ -21,7 +21,8 @@ export const formatUserBalance = (balance) => {
     .toNumber();
   const balanceInteger = balance.div(poolCoeff).toNumber();
 
-  const userBalance = balanceInteger + balanceDecimals;
+  const userBalance =
+    balanceInteger + balanceDecimals / 10 ** ROUNDING_DECIMALS;
 
   return formatNumber(userBalance);
 };
