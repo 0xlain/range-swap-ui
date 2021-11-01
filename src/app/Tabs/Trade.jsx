@@ -177,6 +177,8 @@ export const Trade = () => {
   }
 
   useEffect(() => {
+    if (!fromAmount) return;
+
     const int = BigNumber.from(Math.floor(fromFieldAmount)).mul(
       BigNumber.from(10).pow(decimalsFrom)
     );
@@ -222,9 +224,7 @@ export const Trade = () => {
 
   async function getUserBalance() {
     const userBalance = BigNumber.from(
-      await contractFrom.methods
-        .balanceOf(account)
-        .call()
+      await contractFrom.methods.balanceOf(account).call()
     );
 
     const formattedBalance = formatUserBalance(userBalance);
@@ -293,7 +293,11 @@ export const Trade = () => {
 
   async function handleMaxFrom() {
     try {
-      setFromAmount(balance);
+      const bal = BigNumber.from(
+        await contractFrom.methods.balanceOf(account).call()
+      );
+
+      setFromAmount(bal);
     } catch (e) {
       console.error(e);
     }
