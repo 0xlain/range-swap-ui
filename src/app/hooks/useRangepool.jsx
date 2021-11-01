@@ -15,6 +15,7 @@ export function useRangepool() {
   });
 
   const getContractFee = async () => {
+    contract.RANGEPOOL_CONTRACT.setProvider(library.currentProvider);
     const fee = await contract.RANGEPOOL_CONTRACT.methods.fee().call();
     setContract({ ...contract, CONTRACT_FEE: fee });
   };
