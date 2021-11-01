@@ -152,7 +152,7 @@ export const Trade = () => {
         10 ** ROUNDING_DECIMALS;
       const feeInteger = feeToTake.div(poolCoeff).toNumber();
       const result = feeInteger + feeDecimals;
-      
+
       setFee(result);
     }
   }, [fromAmount, CONTRACT_FEE, decimalsFrom]);
@@ -334,16 +334,15 @@ export const Trade = () => {
           </Paper>
         </Grid>
       </Grid>
-      {Boolean(fee) && (
-        <Grid container item justifyContent="space-between">
-          <Grid item>
-            <Typography>Fee:</Typography>
-          </Grid>
-          <Grid item>
-            <Typography>{fee}</Typography>
-          </Grid>
+
+      <Grid container item justifyContent="space-between">
+        <Grid item>
+          <Typography>Fee:</Typography>
         </Grid>
-      )}
+        <Grid item>
+          <Typography>{fee}</Typography>
+        </Grid>
+      </Grid>
 
       <Grid item container spacing={1}>
         <Grid item xs>
