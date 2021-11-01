@@ -63,10 +63,10 @@ export const Trade = () => {
   const [balance, setBalance] = useState("");
 
   useEffect(() => {
-    if (account && contractFrom) {
+    if (account && tokenFrom) {
       getUserBalance();
     }
-  }, [account, contractFrom]);
+  }, [account, tokenFrom]);
 
   useEffect(() => {
     if (
@@ -175,14 +175,14 @@ export const Trade = () => {
   }, [tokenFrom, tokenTo, fromAmount, account, tokenFrom, tokenFrom]);
 
   useEffect(() => {
-    if (fromAmount && CONTRACT_FEE) {
-      const poolCoeff = BigNumber.from(10).pow(decimalsFrom);
+    if (fromAmount && CONTRACT_FEE && tokenFrom) {
+      const poolCoeff = BigNumber.from(10).pow(tokenFrom.decimals);
       const feeToTake = BigNumber.from(fromAmount)
         .mul(BigNumber.from(CONTRACT_FEE))
         .div(BigNumber.from(10).pow(9));
       const feeDecimals =
         feeToTake
-          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
+          .div(BigNumber.from(10).pow(tokenFrom.decimals - ROUNDING_DECIMALS))
           .toNumber() /
         10 ** ROUNDING_DECIMALS;
       const feeInteger = feeToTake.div(poolCoeff).toNumber();
@@ -190,7 +190,7 @@ export const Trade = () => {
 
       setFee(result);
     }
-  }, [fromAmount, CONTRACT_FEE, decimalsFrom]);
+  }, [fromAmount, CONTRACT_FEE, tokenFrom]);
 
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
@@ -209,7 +209,6 @@ export const Trade = () => {
 
   useEffect(() => {
     if (!tokenFrom) return;
-
 
     const int = BigNumber.from(Math.floor(fromFieldAmount)).mul(
       BigNumber.from(10).pow(tokenFrom.decimals)
@@ -258,7 +257,7 @@ export const Trade = () => {
 
   async function getUserBalance() {
     const userBalance = BigNumber.from(
-      await contractFrom.methods.balanceOf(account).call()
+      await tokenFrom.contract.methods.balanceOf(account).call()
     );
 
     const formattedBalance = formatUserBalance(userBalance);
@@ -328,7 +327,7 @@ export const Trade = () => {
   async function handleMaxFrom() {
     try {
       const bal = BigNumber.from(
-        await contractFrom.methods.balanceOf(account).call()
+        await tokenFrom.contract.methods.balanceOf(account).call()
       );
 
       setFromAmount(bal);
