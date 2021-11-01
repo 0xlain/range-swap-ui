@@ -26,7 +26,7 @@ const BalanceText = styled.p`
   font-family: DM Mono;
   font-style: normal;
   font-weight: 500;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 100%;
   color: rgba(137, 107, 254, 0.7);
 `;
@@ -333,8 +333,9 @@ export const Trade = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <MaxButtonWrapper>
-                      {Boolean(balance) && <BalanceText>{balance}</BalanceText>}
-                      <Button onClick={handleMaxFrom}>Max</Button>
+                      <Button onClick={handleMaxFrom}>
+                        <BalanceText>Balance: {balance || 0}</BalanceText>
+                      </Button>
                     </MaxButtonWrapper>
                   </InputAdornment>
                 ),
