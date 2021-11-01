@@ -51,7 +51,7 @@ export function useTokens() {
 
       setTokens(newTokens);
     });
-  }, [library]);
+  }, [library, RANGEPOOL_CONTRACT]);
 
   return tokens;
 }
