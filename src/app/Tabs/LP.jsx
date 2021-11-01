@@ -18,7 +18,7 @@ import TokenSelect from "../components/TokenSelect";
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
 import { ROUNDING_DECIMALS } from "../utils/constants";
-import { formatNumber } from "../utils";
+import { formatUserBalance } from "../utils";
 
 const TabButton = styled(Button)`
   width: 100%;
@@ -92,20 +92,12 @@ export const LP = () => {
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
   const getUserBalance = async () => {
-    const poolCoeff = BigNumber.from(10).pow(tokenDecimals);
     const balance = BigNumber.from(
       await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
     );
 
-    const balanceDecimals = balance
-      .mod(poolCoeff)
-      .div(BigNumber.from(10).pow(tokenDecimals - ROUNDING_DECIMALS))
-      .toNumber();
-    const balanceInteger = balance.div(poolCoeff).toNumber();
-
-    const userBalance = Number(`${balanceInteger}.${balanceDecimals}`);
-
-    setCurrentPosition(userBalance);
+    const formattedBalance = formatUserBalance(balance);
+    setCurrentPosition(formattedBalance);
   };
 
   useEffect(() => {
@@ -388,9 +380,7 @@ export const LP = () => {
       <Grid item container alignItems="center" justifyContent="center">
         <Grid item>
           <UserLiquidityHeader>Your position</UserLiquidityHeader>
-          <UserLiquidityBalance>
-            {formatNumber(currentPosition)}
-          </UserLiquidityBalance>
+          <UserLiquidityBalance>{currentPosition}</UserLiquidityBalance>
         </Grid>
       </Grid>
       <Grid item>
