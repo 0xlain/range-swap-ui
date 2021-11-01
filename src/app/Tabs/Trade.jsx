@@ -11,17 +11,38 @@ import {
   InputAdornment,
   Paper,
   TextField,
+  Typography,
 } from "@mui/material";
+import styled from "@emotion/styled";
 import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
 import TokenSelect from "../components/TokenSelect";
 import { ROUNDING_DECIMALS } from "../utils/constants";
+import { formatUserBalance } from "../utils";
+
+const BalanceText = styled.p`
+  margin: 0;
+  font-family: DM Mono;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 100%;
+  color: rgba(137, 107, 254, 0.7);
+`;
+
+const MaxButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  align-items: center;
+`;
 
 export const Trade = () => {
   const { account } = useWeb3React();
-  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT } = useRangepool();
+  const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT, CONTRACT_FEE } =
+    useRangepool();
   const tokens = useTokens();
 
   const [fromTokenName, setFromTokenName] = useState("");
@@ -29,6 +50,7 @@ export const Trade = () => {
   const [tokenFrom, setTokenFrom] = useState();
   const [tokenTo, setTokenTo] = useState();
   const [fromAmount, setFromAmount] = useState(BigNumber.from(0));
+  const [fee, setFee] = useState(0);
   const [toAmount, setToAmount] = useState(BigNumber.from(0));
   const [fromFieldAmount, setFromFieldAmount] = useState(0);
   const [toFieldAmount, setToFieldAmount] = useState(0);
@@ -38,6 +60,13 @@ export const Trade = () => {
   const [disableSwapButton, setDisableSwapButton] = useState(true);
   const [swapBackground, setSwapBackground] = useState("");
   const [approveBackground, setApproveBackground] = useState("");
+  const [balance, setBalance] = useState("");
+
+  useEffect(() => {
+    if (account && contractFrom) {
+      getUserBalance();
+    }
+  }, [account, contractFrom]);
 
   useEffect(() => {
     if (
@@ -145,6 +174,24 @@ export const Trade = () => {
     })();
   }, [tokenFrom, tokenTo, fromAmount, account, tokenFrom, tokenFrom]);
 
+  useEffect(() => {
+    if (fromAmount && CONTRACT_FEE) {
+      const poolCoeff = BigNumber.from(10).pow(decimalsFrom);
+      const feeToTake = BigNumber.from(fromAmount)
+        .mul(BigNumber.from(CONTRACT_FEE))
+        .div(BigNumber.from(10).pow(9));
+      const feeDecimals =
+        feeToTake
+          .div(BigNumber.from(10).pow(decimalsFrom - ROUNDING_DECIMALS))
+          .toNumber() /
+        10 ** ROUNDING_DECIMALS;
+      const feeInteger = feeToTake.div(poolCoeff).toNumber();
+      const result = feeInteger + feeDecimals;
+
+      setFee(result);
+    }
+  }, [fromAmount, CONTRACT_FEE, decimalsFrom]);
+
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
       BigNumber.from(10).pow(tokenFrom.decimals)
@@ -162,6 +209,7 @@ export const Trade = () => {
 
   useEffect(() => {
     if (!tokenFrom) return;
+
 
     const int = BigNumber.from(Math.floor(fromFieldAmount)).mul(
       BigNumber.from(10).pow(tokenFrom.decimals)
@@ -207,6 +255,15 @@ export const Trade = () => {
       setToFieldAmount(newFieldAmount);
     }
   }, [toAmount, tokenTo]);
+
+  async function getUserBalance() {
+    const userBalance = BigNumber.from(
+      await contractFrom.methods.balanceOf(account).call()
+    );
+
+    const formattedBalance = formatUserBalance(userBalance);
+    setBalance(formattedBalance);
+  }
 
   async function handleApprove() {
     if (!tokenFrom || !tokenTo || !account) return;
@@ -270,11 +327,11 @@ export const Trade = () => {
 
   async function handleMaxFrom() {
     try {
-      const balance = BigNumber.from(
-        await tokenFrom.contract.methods.balanceOf(account).call()
+      const bal = BigNumber.from(
+        await contractFrom.methods.balanceOf(account).call()
       );
 
-      setFromAmount(balance);
+      setFromAmount(bal);
     } catch (e) {
       console.error(e);
     }
@@ -309,7 +366,11 @@ export const Trade = () => {
                 inputProps: { min: 0 },
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Button onClick={handleMaxFrom}>Max</Button>
+                    <MaxButtonWrapper>
+                      <Button onClick={handleMaxFrom}>
+                        <BalanceText>Balance: {balance || 0}</BalanceText>
+                      </Button>
+                    </MaxButtonWrapper>
                   </InputAdornment>
                 ),
               }}
@@ -345,6 +406,16 @@ export const Trade = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Grid container item justifyContent="space-between">
+        <Grid item>
+          <Typography>Fee:</Typography>
+        </Grid>
+        <Grid item>
+          <Typography>{fee}</Typography>
+        </Grid>
+      </Grid>
+
       <Grid item container spacing={1}>
         <Grid item xs>
           <Button
