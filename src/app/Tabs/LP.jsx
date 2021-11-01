@@ -171,6 +171,8 @@ export const LP = () => {
       if (!token) return;
 
       if (selectedMode === "Add") {
+        if (!token.maxAdd) await token.getMaxAdd();
+
         if (amount.gt(token.maxAdd)) {
           setAmount(token.maxAdd);
         }
@@ -323,6 +325,8 @@ export const LP = () => {
     const balance = BigNumber.from(
       await RANGEPOOL_CONTRACT.methods.balanceOf(account).call()
     );
+
+    if (!token.maxAdd) await token.getMaxAdd();
 
     if (token.maxAdd.gt(balance)) {
       setAmount(balance);
