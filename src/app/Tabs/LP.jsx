@@ -81,10 +81,10 @@ export const LP = () => {
   const [fieldAmount, setFieldAmount] = useState(BigNumber.from(0));
   const [needsApproval, setNeedsApproval] = useState(false);
   const [disableApproveButton, setDisableApproveButton] = useState(true);
-  const [disableSwapButton, setDisableSwapButton] = useState(true);
+  const [disableAddButton, setDisableAddButton] = useState(true);
   const [disableWithdrawButton, setDisableWithdrawButton] = useState(true);
   const [approveBackground, setApproveBackground] = useState();
-  const [swapBackground, setSwapBackground] = useState();
+  const [addBackground, setAddBackground] = useState();
   const [withdrawBackground, setWithdrawBackground] = useState();
   const [enableInfiniteAllowance, setEnableInfiniteAllowance] = useState(false);
 
@@ -129,13 +129,13 @@ export const LP = () => {
       fieldAmount !== 0 &&
       tokenName
     ) {
-      setDisableSwapButton(false);
-      setSwapBackground(
+      setDisableAddButton(false);
+      setAddBackground(
         "linear-gradient(180deg, rgba(43, 22, 129, 0) 0%, #2B1681 100%),linear-gradient(0deg, #59318C, #59318C)"
       );
     } else {
-      setDisableSwapButton(true);
-      setSwapBackground("#59318C59");
+      setDisableAddButton(true);
+      setAddBackground("#59318C59");
     }
   }, [account, needsApproval, amount, fieldAmount, tokenName]);
 
@@ -441,15 +441,15 @@ export const LP = () => {
             <Grid item xs>
               <Button
                 variant="contained"
-                disabled={disableSwapButton}
+                disabled={disableAddButton}
                 onClick={handleAdd}
                 sx={{
                   width: "100%",
                   height: "44px",
-                  background: swapBackground,
+                  background: addBackground,
                 }}
               >
-                Swap
+                Add
               </Button>
             </Grid>
           </>
