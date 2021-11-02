@@ -29,6 +29,11 @@ const AppContainer = styled(Container)`
   left: 0;
   top: 0;
   z-index: 10;
+
+  @media (max-width: 768px) {
+    overflow: auto;
+    padding-bottom: 140px;
+  }
 `;
 
 export const App = () => {

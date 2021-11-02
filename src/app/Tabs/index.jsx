@@ -20,6 +20,20 @@ const TabsWrapper = styled.div`
   margin: 50px 0;
   display: flex;
   justify-content: center;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    height: 55px;
+    margin: 0;
+    background: linear-gradient( 180deg, rgba(120, 95, 218, 0.04) 0%, rgba(120, 95, 218, 0.15) 97.4% );
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid #ff6d41;
+    z-index: 2;
+  }
 `;
 
 const FlexContainer = styled.div`
@@ -58,6 +72,11 @@ const TabContainer = styled.div`
   border-image-source: linear-gradient(180deg, #785fda 0%, #ff6d41 100%);
   border-image-slice: 1;
   border-radius: 8px;
+
+  @media (max-width: 768px) {
+    padding: 30px;
+    margin: 0 30px;
+  }
 `;
 
 export const Tabs = () => {
