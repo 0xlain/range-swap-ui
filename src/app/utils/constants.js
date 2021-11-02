@@ -21,3 +21,8 @@ export const ROPSTEN_CONTRACT = new Contract(
   JSON.parse(rangepool_interface),
   ROPSTEN_ADDRESS
 );
+
+export const ALERT_TYPES = {
+  INFO: 'info',
+  ERROR: 'error',
+}
