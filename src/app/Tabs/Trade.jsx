@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { BigNumber } from "@ethersproject/bignumber";
 import {
@@ -19,8 +19,9 @@ import { ReactComponent as SwapTokensIcon } from "../../assets/SwapIcon.svg";
 import { useTokens } from "../hooks/useTokens";
 import { useRangepool } from "../hooks/useRangepool";
 import TokenSelect from "../components/TokenSelect";
-import { ROUNDING_DECIMALS } from "../utils/constants";
+import { ALERT_TYPES, ROUNDING_DECIMALS } from "../utils/constants";
 import { formatUserBalance } from "../utils";
+import { AlertContext } from "../contexts/AlertContext";
 
 const BalanceText = styled.p`
   margin: 0;
@@ -44,6 +45,7 @@ export const Trade = () => {
   const { RANGEPOOL_ADDRESS, RANGEPOOL_CONTRACT, CONTRACT_FEE } =
     useRangepool();
   const tokens = useTokens();
+  const { showAlert } = useContext(AlertContext);
 
   const [fromTokenName, setFromTokenName] = useState("");
   const [toTokenName, setToTokenName] = useState("");
@@ -304,7 +306,13 @@ export const Trade = () => {
 
       RANGEPOOL_CONTRACT.methods
         .swap(tokenFrom.address, fromAmount, tokenTo.address)
-        .send({ from: account, gasLimit });
+        .send({ from: account, gasLimit })
+        .then(() => {
+          showAlert({
+            type: ALERT_TYPES.INFO,
+            message: "Swap successfully completed!",
+          });
+        });
     } catch (e) {
       console.error(e);
     }
