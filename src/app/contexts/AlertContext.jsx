@@ -4,7 +4,7 @@ import { ALERT_TYPES } from "../utils/constants";
 import MuiAlert from "@mui/material/Alert";
 
 const initialState = { open: false, message: "", messageType: "" };
-export const AlertContext = createContext(null);
+export const AlertContext = createContext({});
 
 const ACTIONS = {
   SHOW: "show",
