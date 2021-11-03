@@ -175,22 +175,13 @@ export const Trade = () => {
   }, [tokenFrom, tokenTo, fromAmount, account, tokenFrom, tokenFrom]);
 
   useEffect(() => {
-    if (fromAmount && CONTRACT_FEE && tokenFrom) {
-      const poolCoeff = BigNumber.from(10).pow(tokenFrom.decimals);
-      const feeToTake = BigNumber.from(fromAmount)
-        .mul(BigNumber.from(CONTRACT_FEE))
-        .div(BigNumber.from(10).pow(9));
-      const feeDecimals =
-        feeToTake
-          .div(BigNumber.from(10).pow(tokenFrom.decimals - ROUNDING_DECIMALS))
-          .toNumber() /
-        10 ** ROUNDING_DECIMALS;
-      const feeInteger = feeToTake.div(poolCoeff).toNumber();
-      const result = feeInteger + feeDecimals;
+    if (CONTRACT_FEE) {
+      const feeMultiplier = CONTRACT_FEE / 10 ** 9;
 
-      setFee(result);
+      const feePercent = feeMultiplier * 100;
+      setFee(feePercent);
     }
-  }, [fromAmount, CONTRACT_FEE, tokenFrom]);
+  }, [CONTRACT_FEE]);
 
   function handleFromAmountChange(e) {
     const int = BigNumber.from(Math.floor(e.target.value)).mul(
@@ -411,7 +402,7 @@ export const Trade = () => {
           <Typography>Fee:</Typography>
         </Grid>
         <Grid item>
-          <Typography>{fee}</Typography>
+          <Typography>{fee} %</Typography>
         </Grid>
       </Grid>
 
