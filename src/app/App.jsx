@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { Header } from "./Header";
 import { Tabs } from "./Tabs/index";
 import { Warning } from "./Warning";
+import { AlertContextProvider } from "./contexts/AlertContext";
 
 const AppContainer = styled(Container)`
   background: radial-gradient(
@@ -38,10 +39,12 @@ const AppContainer = styled(Container)`
 
 export const App = () => {
   return (
-    <AppContainer disableGutters maxWidth={false}>
-      <Header />
-      <Warning />
-      <Tabs />
-    </AppContainer>
+    <AlertContextProvider>
+      <AppContainer disableGutters maxWidth={false}>
+        <Header />
+        <Warning />
+        <Tabs />
+      </AppContainer>
+    </AlertContextProvider>
   );
 };
