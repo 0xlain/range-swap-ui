@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
-import { Button } from "@mui/material";
+import { Button as ConnectButton} from "@mui/material";
+import styled from "@emotion/styled";
 import { useRangepool } from "../hooks/useRangepool";
 
 const injected = new InjectedConnector();
@@ -14,6 +15,19 @@ function shortenHex(hex, length = 4) {
     hex.length - length
   )}`;
 }
+
+const Button = styled(ConnectButton)`
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 55px;
+    padding: 0;
+    height: 55px;
+    width: 100%;
+    z-index: 2;
+  }
+`;
 
 export default function ConnectWalletButton() {
   const { activate, account, library, chainId } = useWeb3React();

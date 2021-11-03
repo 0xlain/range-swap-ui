@@ -445,7 +445,7 @@ export const Trade = () => {
                 onChange={handleCheckboxChange}
               />
             }
-            label="infinite allowance"
+            label="Infinite allowance"
           />
         </FormGroup>
       </Grid>
