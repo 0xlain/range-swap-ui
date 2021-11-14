@@ -19,6 +19,12 @@ const WarningWrapper = styled.div`
 
   background: linear-gradient(92.31deg, #fed56b 30.86%, #ff6d41 64.04%);
   border-radius: 8px;
+
+  @media (max-width: 768px) {
+    width: unset;
+    max-width: 85%;
+    margin-bottom: 25px;
+  }
 `;
 
 const WarningText = styled.p`
@@ -31,6 +37,10 @@ const WarningText = styled.p`
   letter-spacing: -0.02em;
   margin-left: 0 8px;
   color: #191332;
+  
+  @media (max-width: 768px) {
+    margin-left: 10px;
+  }
 `;
 
 const StyledIconButton = styled(IconButton)`
